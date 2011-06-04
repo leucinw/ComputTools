@@ -12,6 +12,7 @@
 ''' python matchTXYZ.py template.txyz dealwith.(t)xyz '''
 
 import os,sys
+
 def readTXYZ(TXYZ, singleAtom=False, tailOnly=False):
   atoms=[];coord=[]; tails = []
   order=[];types=[];connections=[]
@@ -20,9 +21,7 @@ def readTXYZ(TXYZ, singleAtom=False, tailOnly=False):
     order.append(data[0])
     types.append(data[5])
     connections.append(data[6:])
-    idxstr = " " + data[5] + " "
-    idx = line.index(idxstr)
-    tails.append(line[idx:])
+    tails.append(' '.join(data[5:]))
     if singleAtom:
       atoms.append(data[1][0])
     else:
@@ -69,7 +68,7 @@ def main():
       newidx.append(idx)
       fp2[idx] = ' '
     else:
-      print("TWO STRUCTURES DIFFER! PLEASE CHECK !")
+      print("TWO STRUCTURES MAY BE DIFFERENT?")
   atoms, coord, _, _, _ =  readTXYZ(dealwith, singleAtom=True)
   tails = readTXYZ(template,tailOnly=True)
   with open(fname, 'w') as f:
