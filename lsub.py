@@ -11,15 +11,16 @@ from colorama import Fore
 from multiprocessing import Pool
 
 usage = ''' Currently supported syntax:
-  1. python lsub.py water1.com   [water2.com]   [..]
-  2. python lsub.py water1.qchem [water2.qchem] [..]
-  3. python lsub.py water1.psi4  [water2.psi4]  [..]
-  4. python lsub.py *.com
-  5. python lsub.py *.qchem
-  6. python lsub.py *.psi4
+          1. python lsub.py water1.com   [water2.com]   [..]
+          2. python lsub.py water1.qchem [water2.qchem] [..]
+          3. python lsub.py water1.psi4  [water2.psi4]  [..]
+          4. python lsub.py *.com
+          5. python lsub.py *.qchem
+          6. python lsub.py *.psi4
   '''
+
 # global list 
-checkExeList = ["psi4","g09","g16","dynamic.x","cp2k.ssmp","mpirun_qchem", "bar_omm.x", "dynamic_omm.x"]
+checkExeList = ["psi4","g09","g16","dynamic.x","cp2k.ssmp","mpirun_qchem", "orca_mp2_mpi"]
 
 def checkOneNode(eachNode):
   njobs = 0
@@ -122,11 +123,13 @@ def main():
   nodeDict = {"COM"  : "/home/liuchw/bin/GaussianNode",\
               "PSI4" : "/home/liuchw/bin/Psi4Node", \
               "QCHEM": "/home/liuchw/bin/QChemNode"}
-
-  if (filelist  != []) and (jobtype in supportedTypes):
+  if (jobtype not in supportedTypes):
+    print(Fore.RED + "%s files not supported!" %jobtype)
+    sys.exit(1)
+  if (filelist == []):
+    print(Fore.RED + "you may have broken .log files?")
+  if (filelist != []) and (jobtype in supportedTypes):
     subMultipleJobs(filelist, nodeDict[jobtype])
-  else:
-    print(Fore.RED + "Your jobs are NOT submitted!")
   return 
 
 if __name__ == '__main__':
