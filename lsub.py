@@ -24,7 +24,7 @@ checkExeList = ["psi4","g09","g16","dynamic.x","cp2k.ssmp","mpirun_qchem", "orca
 
 def checkOneNode(eachNode):
   njobs = 0
-  cmdstr = "ssh %s 'top -n1 -b' >top.%s"%(eachNode,eachNode)
+  cmdstr = "ssh %s 'top -n1 -b' >top.%s 2>top.err"%(eachNode,eachNode)
   try:
     subprocess.run(cmdstr, shell=True)
     topfile = "top.%s"%eachNode
@@ -132,7 +132,15 @@ def main():
   if (filelist == []):
     print(Fore.RED + "you may have broken .log files?")
   if (filelist != []) and (jobtype in supportedTypes):
-    subMultipleJobs(filelist, nodeDict[jobtype])
+    pairs = []
+    for f in filelist:
+      size = os.path.getsize(f)
+      pairs.append((size,f))
+    pairs.sort(key=lambda s: s[0])
+    sortedfilelist=[]
+    for pair in pairs:
+      sortedfilelist.append(pair[1])
+    subMultipleJobs(sortedfilelist, nodeDict[jobtype])
   return 
 
 if __name__ == '__main__':
