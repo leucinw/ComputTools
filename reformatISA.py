@@ -4,7 +4,6 @@
 
 # Convert the multipole from Iterative Stockholder Atoms (ISA)
 # to the GDMA-like format in order to be read by TINKER poledit
-# then the multipole parameters can be directly used as AMOEBA multipole
 
 # Author: Chengwen Liu
 # University of Texas at Austin
