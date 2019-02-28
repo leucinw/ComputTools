@@ -1,2 +1,2 @@
 # ComputTools
-Computational tools to accomplish small tasks
+Computational tools for accomplishing small tasks
