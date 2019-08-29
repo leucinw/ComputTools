@@ -30,7 +30,7 @@ oFile.write("Multipole moments in atomic units, ea_0^k for rank k\n\n")
 #Read ATOM and COORDINATES from Gaussian 
 atomList = []
 coordList = []
-lines = file(cartesian).readlines()
+lines = open(cartesian).readlines()
 for line in lines:
   if "Standard orientation" in line:
     nIndex = lines.index(line)
@@ -45,7 +45,7 @@ while True:
 
 #Read Multipoles from ISA output
 multipole = []
-lines = file(isaOUT).readlines()
+lines = open(isaOUT).readlines()
 for line in lines:
   if ( "|" in line) and ("Multipoles" not in line):
     rawData = line.split()
@@ -57,7 +57,7 @@ for line in lines:
 
 #Write them to the formatted multipole file
 
-for n in xrange(len(atomList)):
+for n in range(len(atomList)):
   oFile.write("%-11sx =%10.6f  y =%10.6f  z =%10.6f\n\n"%(atomList[n], coordList[n][0], coordList[n][1], coordList[n][2]))
   oFile.write("%22s  = %10.6f\n"%("Q00", multipole[n][0]))
   oFile.write("%22s  = %10.6f%6s =%10.6f%7s =%10.6f\n"%("Q10", multipole[n][1], "Q11c", multipole[n][2], "Q11s", multipole[n][3]))
