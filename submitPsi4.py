@@ -28,12 +28,11 @@ def checkPsi4Jobs(node):
     print("%s is IDLE, ready to submit your jobs!"%node)
     return True 
   else:
-    #print("%s has %s jobs, come back later !"%(node, psi4Jobs))
     print("%s is BUSY, come back later!"%(node))
     return False
 
 '''
-    Submit one psi4 job on a idle node 
+    Submit one psi4 job on an idle node 
 '''
 def sub_one_sapt(node, psi4):
   fname = psi4.split(".psi4")[0]
@@ -44,7 +43,7 @@ def sub_one_sapt(node, psi4):
 
 ''' auto-submit jobs on specified nodelist
     for specified files in filelist 
-    1. check idle nodes and save to a idlelist
+    1. check idle nodes and save to an idlelist
     2. submit jobs on idle nodes
     3. keep doing 1,2 until all jobs are submitted 
 '''
