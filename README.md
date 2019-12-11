@@ -6,8 +6,10 @@ __Notes__:
 1. these programs are being actively developed
 1. correctness not guaranteed and use with caution
 
-__Author__: Chengwen Liu <br>
+__Author__: Chengwen Liu
+
 __Email__: `liuchw2010@gmail.com`
+
 ---
 
 - bondangle.py: calculate bond and angle for a given xyz/txyz file
