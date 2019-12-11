@@ -1,14 +1,14 @@
 # ComputTools
 
-Computational tools for accomplishing small tasks
+keywords: Tinker, Gaussian, Geometry, Psi4
 
 __Notes__: 
 1. these programs are being actively developed
 1. correctness not guaranteed and use with caution
 
-__Author__: Chengwen Liu
-
-__Email__: liuchw2010@gmail.com
+__Author__: Chengwen Liu <br>
+__Email__: `liuchw2010@gmail.com`
+---
 
 - bondangle.py: calculate bond and angle for a given xyz/txyz file
 - chemFileConvert.py: convert a variety formats of chemical files from one to another
