@@ -1,4 +1,11 @@
 
+
+#===================================
+# 	     Chengwen Liu              #
+# 	   liuchw2010@gmail.com        #
+# 	University of Texas at Austin  #
+#===================================
+
 # After poltype run, we have ttt.xyz and ttt.key as the final force field txyz and parameter file
 # It is very often that files have their class definition overlapped.
 # Here I will use this script to automatically deal with this 

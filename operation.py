@@ -1,4 +1,10 @@
-#!/usr/bin/env python
+
+#===================================
+# 	     Chengwen Liu              #
+# 	   liuchw2010@gmail.com        #
+# 	University of Texas at Austin  #
+#===================================
+
 
 # translate the second molecule so that we have a certain distance 
 # defined by two lists of atoms

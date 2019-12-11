@@ -1,4 +1,10 @@
-#!/usr/bin/env python
+
+#===================================
+# 	     Chengwen Liu              #
+# 	   liuchw2010@gmail.com        #
+# 	University of Texas at Austin  #
+#===================================
+
 
 #  TXYZ2COM:  From TINKER xyz file to Gaussian input file
 #  LOG2COM:   From Gaussian output file to Gaussian input file

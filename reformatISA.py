@@ -1,13 +1,15 @@
-#!/usr/bin/env python
+
+#===================================
+# 	     Chengwen Liu              #
+# 	   liuchw2010@gmail.com        #
+# 	University of Texas at Austin  #
+#===================================
+
 
 # Usage: reformatISA.py isa_multipoles.txt
 
 # Convert the multipole from Iterative Stockholder Atoms (ISA)
 # to the GDMA-like format in order to be read by TINKER poledit
-
-# Author: Chengwen Liu
-# University of Texas at Austin
-# June 9th, 2017
 
 import os,sys
 

@@ -1,4 +1,10 @@
-#!/usr/bin/env python
+
+#===================================
+# 	     Chengwen Liu              #
+# 	   liuchw2010@gmail.com        #
+# 	University of Texas at Austin  #
+#===================================
+
 
 # distance between two atoms
 # input the two coordinates[x,y,z]

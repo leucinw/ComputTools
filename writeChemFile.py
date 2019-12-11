@@ -1,4 +1,10 @@
-#!/usr/bin/env python
+
+#===================================
+# 	     Chengwen Liu              #
+# 	   liuchw2010@gmail.com        #
+# 	University of Texas at Austin  #
+#===================================
+
 
 def writeTXYZ(outXYZ, order, atoms, coord, types, connections):
 	fout = open(outXYZ, "w")

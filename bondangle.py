@@ -1,11 +1,16 @@
-#!/usr/bin/env python
+
+#===================================
+# 	     Chengwen Liu              #
+# 	   liuchw2010@gmail.com        #
+# 	University of Texas at Austin  #
+#===================================
 
 from readChemFile import *
 from geomFunction import *
 
 import sys
 
-usage = "bondangle.py filename atom1 atom2 [atom3]"
+usage = "python bondangle.py filename atom1 atom2 [atom3]"
 
 if (len(sys.argv) !=4) and (len(sys.argv) !=5):
 	print(usage)
