@@ -49,10 +49,8 @@ def COM2COM(COM):
   return True
 
 # 2. common xyz to com
-def XYZ2COM(XYZ, method="HF", basis="3-21G ", nproc="4", charge="0", multiplicity="1", jobtype="SP", memory="10GB"):
+def XYZ2COM(XYZ, method="HF", basis="3-21G ", nproc="8", charge="0", multiplicity="1", jobtype="SP", memory="100GB"):
 	chrgMult=charge + " " + multiplicity
-	if (method == "TPSS"):
-		method = "TPSSTPSS"
 	jobType = jobtype 
 	extraKeyword = " NoSymm MaxDisk=100GB "
 	data = readXYZ(XYZ)
@@ -60,7 +58,7 @@ def XYZ2COM(XYZ, method="HF", basis="3-21G ", nproc="4", charge="0", multiplicit
 	fileName = XYZ.split(".xyz")[0]
 	fout=open(fileName+".com",'w')
 	fout.write("%chk="+"%s.chk\n"%fileName)
-	fout.write("%nproc="+nproc+"\n%Mem="+memory+"\n#p "+method+"/"+basis+" %s\n\n%s \n\n%s\n"%(jobType,jobType,chrgMult))
+	fout.write("%nproc="+nproc+"\n%Mem="+memory+"\n#p "+method+"/"+basis + extraKeyword + " %s\n\n%s \n\n%s\n"%(jobType,jobType,chrgMult))
 	for n in range(len(atoms)):
 		fout.write("%3s             %14.7f%14.7f%14.7f\n"%(atoms[n],float(coord[n][0]),float(coord[n][1]),float(coord[n][2])))
 	fout.write("\n")
@@ -176,6 +174,10 @@ def LOG2COM(LOG, counterpoise=False,optCartesian=False):
                  '16':'S','17':'Cl','18':'Ar','19':'K','20':'Ca','22':'Ti','26':'Fe',\
                  '27':'Co','28':'Ni','29':'Cu','30':'Zn','35':'Br'}
   data = readLOG(LOG)
+  nproc = "8"
+  QM = "MP2"
+  basis = "6-31G*"
+  extraKeyword = " "
   if optCartesian == True:
     jobType = "Opt=(tight,Cartesian) "
   coord = data[0]
