@@ -3,7 +3,7 @@
 
 import os,sys
 
-def subJobOnNode(node, input_file, userpath=None):
+def sub(node, input_file, userpath=None):
     data = os.path.splitext(input_file)
     fname = data[0]
     ext = data[1]
@@ -82,7 +82,7 @@ def dynamic():
 		if os.path.isfile(os.path.join(dirname, argDict["TINKERXYZ"].split(".xyz")[0]+".arc")):
 			print(" .arc file exists in %s !"%dirname)
 		else:
-			subJobOnNode(nodelist[i], argDict["DYNAMICRUN"], dirname) 
+			sub(nodelist[i], argDict["DYNAMICRUN"], dirname) 
 			print(" Submitted dynamic job on %s !"%nodelist[i])
 	return
 
@@ -99,15 +99,15 @@ def bar():
 	for i in range(len(orderparams)-1):
 		tmp = orderparams[i]
 		dirname = currDir + "/" + fname + "-%03d-%03d"% ((int(float(tmp[0])*100)), (int(float(tmp[1])*100)))
-		subJobOnNode(nodelist[i], argDict["BARRUN"], dirname) 
+		sub(nodelist[i], argDict["BARRUN"], dirname) 
 		if os.path.isfile(os.path.join(dirname, argDict["TINKERXYZ"].split(".xyz")[0]+".bar")):
 			print(" .bar file exists in %s !"%dirname)
 			os.system("rm -f %s"%os.path.join(dirname, argDict["TINKERXYZ"].split(".xyz")[0]+".bar"))
-			subJobOnNode(nodelist[i], argDict["BARRUN"], dirname)
+			sub(nodelist[i], argDict["BARRUN"], dirname)
 			print(" Deleted .bar file in %s !"%dirname)
 			print(" Submitted bar job on %s !"%nodelist[i])
 		else:
-			subJobOnNode(nodelist[i], argDict["BARRUN"], dirname) 
+			sub(nodelist[i], argDict["BARRUN"], dirname) 
 			print(" Submitted bar job on %s !"%nodelist[i])
 	return
 
