@@ -16,7 +16,7 @@
 # 2. apply the new atom classes to ttt.xyz and ttt.key  
 # 3. output xyz files and appended key file to a new diredctory
 
-import os
+import os,sys
 from readDataFile import *
 from readChemFile import *
 from writeChemFile import *
@@ -51,7 +51,7 @@ def modOnePRM(PRM, classNum, outPRM, term):
 			remainStr = ''
 			for remain in remainList[i]:
 				remainStr += (remain + "   ")
-			ofile.write("%s %s %s %s\n"%(atoms[i], atomList[i], typeList[i], remainStr))
+			ofile.write("%4s %3s %3s %s\n"%(atoms[i], atomList[i], typeList[i], remainStr))
 		ofile.close()
 		return len(set(typeList))
 
@@ -76,23 +76,31 @@ def modOnePRM(PRM, classNum, outPRM, term):
 			polarGrpStr = ''
 			for polGrp in polarGroupList[i]:
 				polarGrpStr += (str(polGrp) + " ")
-			ofile.write("%s %s %s %s %s\n"%(polarizes[i], atomList[i], atomicPolarList[i], dampingList[i], polarGrpStr))
+			ofile.write("%8s %5s %8s %8s %s\n"%(polarizes[i], atomList[i], atomicPolarList[i], dampingList[i], polarGrpStr))
 		ofile.close()
 		return len(set(atomList))
 
-classNumber = 240 
+#os.system("rm -rf tinker.key")
+#classNumber = 1 
+#for eachFile in readWholeFile("filelist"):
+#	addedNum = modOnePRM(eachFile+"/ttt.key", classNumber, "tinker.key", "atom ")
+#	classNumber += addedNum
+#
+#classNumber = 1 
+#for eachFile in readWholeFile("filelist"):
+#	addedNum = modOnePRM(eachFile+"/ttt.key", classNumber, "tinker.key", "polarize ")
+#	classNumber += addedNum
+#	print(classNumber)
 
-os.system("rm -rf tinker.key")
-for eachFile in readWholeFile("filelist"):
-	addedNum = modOnePRM(eachFile+"/ttt.key", classNumber, "tinker.key", "atom ")
-
-for eachFile in readWholeFile("filelist"):
-	addedNum = modOnePRM(eachFile+"/ttt.key", classNumber, "tinker.key", "polarize ")
-	classNumber += addedNum
-
+classNumber = 1
 os.system("rm -rf myXYZs/*.xyz")
 for eachFile in readWholeFile("filelist"):
-	addedNum = modOneTXYZ(eachFile+"/ttt.xyz", classNumber, "temp.xyz")
-	os.system("mv temp.xyz ./myXYZs/%s.xyz"%eachFile)
+	print(os.listdir(eachFile))
+	if "ttt.xyz" in os.listdir(eachFile):
+		filename = eachFile+"/ttt.xyz"
+	else:	
+		filename = eachFile+"/ttt.txyz"
+	addedNum = modOneTXYZ(filename, classNumber, "temp.xyz")
+	os.system("mv temp.xyz ./myXYZs/%s.txyz"%eachFile)
 	classNumber += addedNum
 
