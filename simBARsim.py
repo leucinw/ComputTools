@@ -104,8 +104,7 @@ def bar():
 			print(" .bar file exists in %s !"%dirname)
 			os.system("rm -f %s"%os.path.join(dirname, argDict["TINKERXYZ"].split(".xyz")[0]+".bar"))
 			sub(nodelist[i], argDict["BARRUN"], dirname)
-			print(" Deleted .bar file in %s !"%dirname)
-			print(" Submitted bar job on %s !"%nodelist[i])
+			print(" Deleted .bar file in %s and Resubmitted bar job on %s !"%(dirname, nodelist[i]))
 		else:
 			sub(nodelist[i], argDict["BARRUN"], dirname) 
 			print(" Submitted bar job on %s !"%nodelist[i])
