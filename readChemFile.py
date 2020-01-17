@@ -1,8 +1,8 @@
 
 #===================================
-# 	     Chengwen Liu              #
-# 	   liuchw2010@gmail.com        #
-# 	University of Texas at Austin  #
+#        Chengwen Liu              #
+#      liuchw2010@gmail.com        #
+#   University of Texas at Austin  #
 #===================================
 
 
@@ -115,49 +115,49 @@ def readTinkerOut(OUT):
 # read tinker parameter file
 
 def readTinkerPRM(PRM, term):
-	lines = readWholeFile(PRM)
-	
-	# atom
-	if term == "atom ":
-		atoms = []
-		atomList = []
-		typeList = []
-		remainder = []
-		for line in lines:
-			if term in line:
-				data = line.split()
-				atoms.append(data[0])
-				atomList.append(int(data[1]))
-				typeList.append(int(data[2]))
-				remainder.append(data[3:])
-		return atoms, atomList, typeList, remainder
+  lines = readWholeFile(PRM)
+  
+  # atom
+  if term == "atom ":
+    atoms = []
+    atomList = []
+    typeList = []
+    remainder = []
+    for line in lines:
+      if term in line:
+        data = line.split()
+        atoms.append(data[0])
+        atomList.append(int(data[1]))
+        typeList.append(int(data[2]))
+        remainder.append(data[3:])
+    return atoms, atomList, typeList, remainder
 
-	if term == "multipole ":
-		mpoleList = []	
-	if term == "polarize ":
-		polarizes = []	
-		atomList = []
-		atomicPolarList = []
-		dampingList = []
-		polarGroupList = []
-		for line in lines:
-			if term in line:
-				data = line.split()
-				polarizes.append(data[0])
-				atomList.append(int(data[1]))
-				atomicPolarList.append(data[2])
-				# good for AMOEBA not for AMOEBA+
-				dampingList.append(data[3])
-				polarGroupList.append([int(data[i]) for i in range(4, len(data), 1)])
-		return polarizes, atomList, atomicPolarList, dampingList, polarGroupList
+  if term == "multipole ":
+    mpoleList = []  
+  if term == "polarize ":
+    polarizes = []  
+    atomList = []
+    atomicPolarList = []
+    dampingList = []
+    polarGroupList = []
+    for line in lines:
+      if term in line:
+        data = line.split()
+        polarizes.append(data[0])
+        atomList.append(int(data[1]))
+        atomicPolarList.append(data[2])
+        # good for AMOEBA not for AMOEBA+
+        dampingList.append(data[3])
+        polarGroupList.append([int(data[i]) for i in range(4, len(data), 1)])
+    return polarizes, atomList, atomicPolarList, dampingList, polarGroupList
 
-	if term == "vdw ":
-		vdwList = []	
-	if term == "bond ":
-		bondList = []	
-	if term == "angle ":
-		angleList = []	
-	if term == "strbnd ":
-		strbndList = []
-	return
-	
+  if term == "vdw ":
+    vdwList = []  
+  if term == "bond ":
+    bondList = []  
+  if term == "angle ":
+    angleList = []  
+  if term == "strbnd ":
+    strbndList = []
+  return
+  
