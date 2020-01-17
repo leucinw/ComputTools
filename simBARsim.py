@@ -74,7 +74,7 @@ def dynamic():
   fname = argDict["DIRNAME"]
   for prm in argDict["ORDERPARAMS"].split(">"):
     orderparams.append(prm.split(","))
-  for node in argDict["GPUNODE"].split(","):
+  for node in argDict["NODELIST"].split(","):
     nodelist.append(node)
   for i in range(len(orderparams)):
     tmp = orderparams[i]
@@ -94,7 +94,7 @@ def bar():
   fname = argDict["DIRNAME"]
   for prm in argDict["ORDERPARAMS"].split(">"):
     orderparams.append(prm.split(","))
-  for node in argDict["GPUNODE"].split(","):
+  for node in argDict["NODELIST"].split(","):
     nodelist.append(node)
   for i in range(len(orderparams)-1):
     tmp = orderparams[i]
