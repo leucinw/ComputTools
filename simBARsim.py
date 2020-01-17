@@ -8,25 +8,15 @@ def sub(node, input_file, userpath=None):
   fname = data[0]
   ext = data[1]
   if userpath == None: 
-      cwd = os.getcwd()
-  if userpath != None:
-      cwd = userpath 
-  if ext == ".psi4": # psi4 
-      cmdstr = 'ssh %s "source /home/liuchw/.bashrc.psi4conda; cd %s; nohup psi4 -n 8 -i %s.psi4 -o %s.log 2>err.log &" &' % (
-          node, cwd, fname, fname)
-  if ext == ".com": # gaussian 
-      cmdstr = 'ssh %s "source /home/liuchw/.bashrc.G16; cd %s; nohup g16 %s.com %s.out 2>err.log &" &' % (
-          node, cwd, fname, fname)
-  if ext == ".poltype": # poltype
-      cmdstr = 'ssh %s "source ~/.bashrc.poltype; cd %s; nohup sh %s.sh 2>err.log &" &' % (
-          node, cwd, fname)
-  if ext == ".sh": # regular  
-      cmdstr = 'ssh %s "cd %s; nohup sh %s.sh 2>err.log &" &' % (node, cwd, fname)
+    cwd = os.getcwd()
+  else:
+    cwd = userpath 
+  cmdstr = 'ssh %s "cd %s; nohup sh %s.sh 2>err.log &" &' % (node, cwd, fname)
   os.system(cmdstr)
   return
 
 def readini():
-  argDict = {"DIRNAME": "Solvation"}
+  argDict = {}
   lines = [line for line in open("bar.ini").readlines()]
   for line in lines:
     if ("#" not in line) and (line != "\n"):
@@ -99,7 +89,6 @@ def bar():
   for i in range(len(orderparams)-1):
     tmp = orderparams[i]
     dirname = currDir + "/" + fname + "-%03d-%03d"% ((int(float(tmp[0])*100)), (int(float(tmp[1])*100)))
-    sub(nodelist[i], argDict["BARRUN"], dirname) 
     if os.path.isfile(os.path.join(dirname, argDict["TINKERXYZ"].split(".xyz")[0]+".bar")):
       print(" .bar file exists in %s !"%dirname)
       os.system("rm -f %s"%os.path.join(dirname, argDict["TINKERXYZ"].split(".xyz")[0]+".bar"))
@@ -110,6 +99,9 @@ def bar():
       print(" Submitted bar job on %s !"%nodelist[i])
   return
 
+# (1) Setup simulation systems
 setup()
+# (2) Run dynamic simulations
 dynamic()
+# (3) Run bar simulations when (2) is DONE. 
 bar()  
