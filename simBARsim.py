@@ -131,10 +131,10 @@ def result():
   
   
 # (1) Setup simulation systems
-#setup()
+setup()
 # (2) Run dynamic simulations
-#dynamic()
+dynamic()
 # (3) Run bar simulations when (2) is DONE. 
-#bar() 
+bar() 
 # (4) Summarize the results when (3) is DONE.
 result() 
