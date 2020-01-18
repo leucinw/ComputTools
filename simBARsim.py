@@ -2,6 +2,7 @@
 # Integrate BAR simulations in one script
 
 import os,sys
+import numpy as np
 
 def sub(node, input_file, userpath=None):
   data = os.path.splitext(input_file)
@@ -99,9 +100,41 @@ def bar():
       print(" Submitted bar job on %s !"%nodelist[i])
   return
 
+def result():
+  currDir = os.getcwd()
+  argDict = readini()
+  Free = []
+  Err = []
+  Dir = []
+  orderparams = []
+  fname = argDict["DIRNAME"]
+  for prm in argDict["ORDERPARAMS"].split(">"):
+    orderparams.append(prm.split(","))
+  for i in range(len(orderparams)-1):
+    tmp = orderparams[i]
+    dirname = currDir + "/" + fname + "-%03d-%03d"% ((int(float(tmp[0])*100)), (int(float(tmp[1])*100)))
+    Dir.append(fname+"-%03d-%03d"%((int(float(tmp[0])*100)), (int(float(tmp[1])*100))))
+    if os.path.isfile(os.path.join(dirname, "freeEnergy.log")):
+      for line in open(os.path.join(dirname,"freeEnergy.log")).readlines():
+        if "Free Energy via BAR Iteration" in line:
+          Free.append(float(line.split()[-4]))
+          Err.append(float(line.split()[-2]))
+    else:
+          print("Free Energy calculation not complete in %"%fname+"-%03d-%03d"%((int(float(tmp[0])*100)), (int(float(tmp[1])*100))))
+  for i,j,k in zip(Dir,Free,Err):
+    print("%20s%10.2f%10.2f"%(i,j,k))
+  totFree = np.array(Free).sum()
+  totErr = ((np.array(Err)**2).sum())**0.5
+  print("%20s%10.2f%10.2f"%("Total Free Energy", totFree, totErr))
+  return
+    
+  
+  
 # (1) Setup simulation systems
-setup()
+#setup()
 # (2) Run dynamic simulations
-dynamic()
+#dynamic()
 # (3) Run bar simulations when (2) is DONE. 
-bar()  
+#bar() 
+# (4) Summarize the results when (3) is DONE.
+result() 
