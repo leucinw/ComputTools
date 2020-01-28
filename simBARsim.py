@@ -28,11 +28,20 @@ def readini():
   return argDict
 
 def setup():
-  argDict = readini()   
-  orderparams = argDict["ORDERPARAMS"].split(">")
+  argDict = readini()
+  orderparams = [] 
+  if argDict["ORDERPARAMS"] == "read":
+    lines = open("orderparams").readlines()
+    for line in lines:
+      if "#" not in line:
+        orderparams.append(line.split())
+  else:
+    for prm in argDict["ORDERPARAMS"].split(">"):
+      orderparams.append(prm.split(","))
+  print(orderparams)
   for i in range(len(orderparams)):
-    elb = orderparams[i].split(",")[0]
-    vlb = orderparams[i].split(",")[1]
+    elb = orderparams[i][0]
+    vlb = orderparams[i][1]
     dirname = "%s-%s-%s"%(argDict["DIRNAME"], "%03d"%int(float(elb)*100), "%03d"%int(float(vlb)*100))      
     if not os.path.isdir(dirname): 
       os.mkdir(dirname)
@@ -44,8 +53,8 @@ def setup():
     os.system(copystr)
     os.system("mv temp.key %s/%s"%(dirname, argDict["TINKERKEY"]))
     if i < len(orderparams)-1:  
-      elb_ = orderparams[i+1].split(",")[0]
-      vlb_ = orderparams[i+1].split(",")[1]
+      elb_ = orderparams[i+1][0]
+      vlb_ = orderparams[i+1][1]
       dirname_ = "%s-%s-%s"%(argDict["DIRNAME"], "%03d"%int(float(elb_)*100), "%03d"%int(float(vlb_)*100))      
       lines = open(argDict["BARRUN"]).readlines()
       for j in range(len(lines)):
@@ -62,11 +71,21 @@ def dynamic():
   argDict = readini()
   orderparams = []
   nodelist = []
+  orderparams = [] 
   fname = argDict["DIRNAME"]
-  for prm in argDict["ORDERPARAMS"].split(">"):
-    orderparams.append(prm.split(","))
-  for node in argDict["NODELIST"].split(","):
-    nodelist.append(node)
+  if argDict["ORDERPARAMS"] == "read":
+    lines = open("orderparams").readlines()
+    for line in lines:
+      if "#" not in line:
+        orderparams.append(line.split())
+  else:
+    for prm in argDict["ORDERPARAMS"].split(">"):
+      orderparams.append(prm.split(","))
+  if argDict["NODELIST"]=="read":
+    nodelist = [line.split("\n")[0] for line in open("nodelist").readlines()]
+  else:
+    for node in argDict["NODELIST"].split(","):
+      nodelist.append(node)
   for i in range(len(orderparams)):
     tmp = orderparams[i]
     dirname = currDir + "/" + fname + "-%03d-%03d"% ((int(float(tmp[0])*100)), (int(float(tmp[1])*100)))
@@ -82,11 +101,21 @@ def bar():
   argDict = readini()
   orderparams = []
   nodelist = []
+  orderparams = [] 
   fname = argDict["DIRNAME"]
-  for prm in argDict["ORDERPARAMS"].split(">"):
-    orderparams.append(prm.split(","))
-  for node in argDict["NODELIST"].split(","):
-    nodelist.append(node)
+  if argDict["ORDERPARAMS"] == "read":
+    lines = open("orderparams").readlines()
+    for line in lines:
+      if "#" not in line:
+        orderparams.append(line.split())
+  else:
+    for prm in argDict["ORDERPARAMS"].split(">"):
+      orderparams.append(prm.split(","))
+  if argDict["NODELIST"]=="read":
+    nodelist = [line.split("\n")[0] for line in open("nodelist").readlines()]
+  else:
+    for node in argDict["NODELIST"].split(","):
+      nodelist.append(node)
   for i in range(len(orderparams)-1):
     tmp = orderparams[i]
     dirname = currDir + "/" + fname + "-%03d-%03d"% ((int(float(tmp[0])*100)), (int(float(tmp[1])*100)))
@@ -108,8 +137,14 @@ def result():
   Dir = []
   orderparams = []
   fname = argDict["DIRNAME"]
-  for prm in argDict["ORDERPARAMS"].split(">"):
-    orderparams.append(prm.split(","))
+  if argDict["ORDERPARAMS"] == "read":
+    lines = open("orderparams").readlines()
+    for line in lines:
+      if "#" not in line:
+        orderparams.append(line.split())
+  else:
+    for prm in argDict["ORDERPARAMS"].split(">"):
+      orderparams.append(prm.split(","))
   for i in range(len(orderparams)-1):
     tmp = orderparams[i]
     dirname = currDir + "/" + fname + "-%03d-%03d"% ((int(float(tmp[0])*100)), (int(float(tmp[1])*100)))
@@ -131,10 +166,10 @@ def result():
   
   
 # (1) Setup simulation systems
-setup()
+#setup()
 # (2) Run dynamic simulations
 dynamic()
 # (3) Run bar simulations when (2) is DONE. 
-bar() 
+#bar() 
 # (4) Summarize the results when (3) is DONE.
-result() 
+#result() 
