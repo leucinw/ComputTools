@@ -177,12 +177,3 @@ def main():
 
 if __name__ == '__main__':
   main()
-  
-# (1) Setup simulation systems
-#setup()
-# (2) Run dynamic simulations
-#dynamic()
-# (3) Run bar simulations when (2) is DONE. 
-#bar() 
-# (4) Summarize the results when (3) is DONE.
-#result() 
