@@ -1,19 +1,26 @@
 
+
+#===================================
+#        Chengwen Liu              #
+#      liuchw2010@gmail.com        #
+#   University of Texas at Austin  #
+#===================================
+
+
 # Integrate BAR simulations in one script
 
 import os,sys
 import numpy as np
+import subprocess
 
 def sub(node, input_file, userpath=None):
-  data = os.path.splitext(input_file)
-  fname = data[0]
-  ext = data[1]
-  if userpath == None: 
+  fname, ext = os.path.splitext(input_file)
+  if userpath:
+    cwd = userpath
+  else: 
     cwd = os.getcwd()
-  else:
-    cwd = userpath 
   cmdstr = 'ssh %s "cd %s; nohup sh %s.sh 2>err.log &" &' % (node, cwd, fname)
-  os.system(cmdstr)
+  subprocess.run(cmdstr, shell=True)
   return
 
 def readini():
@@ -38,20 +45,19 @@ def setup():
   else:
     for prm in argDict["ORDERPARAMS"].split(">"):
       orderparams.append(prm.split(","))
-  print(orderparams)
   for i in range(len(orderparams)):
     elb = orderparams[i][0]
     vlb = orderparams[i][1]
     dirname = "%s-%s-%s"%(argDict["DIRNAME"], "%03d"%int(float(elb)*100), "%03d"%int(float(vlb)*100))      
     if not os.path.isdir(dirname): 
       os.mkdir(dirname)
-    os.system("cp %s temp.key"%argDict["TINKERKEY"])
+    subprocess.run("cp %s temp.key"%argDict["TINKERKEY"], shell=True)
     with open("temp.key","a") as temp:
       temp.write("ele-lambda %10.3f\n"%float(elb))
       temp.write("vdw-lambda %10.3f\n"%float(vlb))
     copystr = "cp %s %s %s %s"%(argDict["TINKERXYZ"], argDict["TINKERPRM"], argDict["DYNAMICRUN"], dirname)
-    os.system(copystr)
-    os.system("mv temp.key %s/%s"%(dirname, argDict["TINKERKEY"]))
+    subprocess.run(copystr, shell=True)
+    subprocess.run("mv temp.key %s/%s"%(dirname, argDict["TINKERKEY"]), shell=True)
     if i < len(orderparams)-1:  
       elb_ = orderparams[i+1][0]
       vlb_ = orderparams[i+1][1]
@@ -63,7 +69,7 @@ def setup():
       with open("temp.sh", "w") as temp:
         for line in lines:
           temp.write(line)
-      os.system("mv temp.sh %s/%s"%(dirname, argDict["BARRUN"]))
+      subprocess.run("mv temp.sh %s/%s"%(dirname, argDict["BARRUN"]),shell=True)
   return
 
 def dynamic():
@@ -121,7 +127,7 @@ def bar():
     dirname = currDir + "/" + fname + "-%03d-%03d"% ((int(float(tmp[0])*100)), (int(float(tmp[1])*100)))
     if os.path.isfile(os.path.join(dirname, argDict["TINKERXYZ"].split(".xyz")[0]+".bar")):
       print(" .bar file exists in %s !"%dirname)
-      os.system("rm -f %s"%os.path.join(dirname, argDict["TINKERXYZ"].split(".xyz")[0]+".bar"))
+      subprocess.run("rm -f %s"%os.path.join(dirname, argDict["TINKERXYZ"].split(".xyz")[0]+".bar"),shell=True)
       sub(nodelist[i], argDict["BARRUN"], dirname)
       print(" Deleted .bar file in %s and Resubmitted bar job on %s !"%(dirname, nodelist[i]))
     else:
@@ -168,7 +174,7 @@ def result():
 # (1) Setup simulation systems
 #setup()
 # (2) Run dynamic simulations
-dynamic()
+#dynamic()
 # (3) Run bar simulations when (2) is DONE. 
 #bar() 
 # (4) Summarize the results when (3) is DONE.
