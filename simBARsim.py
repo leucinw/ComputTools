@@ -169,7 +169,14 @@ def result():
   print("%20s%10.2f%10.2f"%("Total Free Energy", totFree, totErr))
   return
     
-  
+def main():
+  actions = {'setup':setup, 'dynamic':dynamic, 'bar':bar, 'result':result}
+  for action in sys.argv[1:]:
+    if action in actions:
+      actions[action]()
+
+if __name__ == '__main__':
+  main()
   
 # (1) Setup simulation systems
 #setup()
