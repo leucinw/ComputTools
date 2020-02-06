@@ -161,7 +161,7 @@ def result():
           Free.append(float(line.split()[-4]))
           Err.append(float(line.split()[-2]))
     else:
-          print("Free Energy calculation not complete in %"%fname+"-%03d-%03d"%((int(float(tmp[0])*100)), (int(float(tmp[1])*100))))
+          print("Free Energy calculation not complete in %s"%fname+"-%03d-%03d"%((int(float(tmp[0])*100)), (int(float(tmp[1])*100))))
   for i,j,k in zip(Dir,Free,Err):
     print("%20s%10.2f%10.2f"%(i,j,k))
   totFree = np.array(Free).sum()
