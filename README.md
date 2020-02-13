@@ -12,9 +12,9 @@ __Email__: `liuchw2010@gmail.com`
 
 - bondangle.py: calculate bond and angle for a given xyz/txyz file
 - chemFileConvert.py: convert a variety formats of chemical files from one to another
-- dipoleCOC2COM.py: convert the dipole moment from Center Of nuclear Charge to Center Of Mass origin. COC is from Gaussian output.
+- dipoleCOC2COM.py: convert the dipole moment from Center Of nuclear Charge to Center Of Mass origin. COC dipoles are from Gaussian output.
 - geomFunction.py: some functions define the geometrical maths. distance, geometry center ...
-- leucinwSUB.py: a easy to use script for submitting jobs on cluster  
+- leucinwSUB.py: an easy to use script for submitting jobs on cluster  
 - operation.py: operation of molecules in Cartesian dimension. translation, rotation, ...
 - polarSolver.py: find three eigenvalues from polarizability tensor
 - reformatISA.py: write the output of hi-part ISA multipoles to Tinker-readable format
