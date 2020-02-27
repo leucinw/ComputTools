@@ -9,7 +9,7 @@
 # Convert the second tinker xyz file to the first one
 
 # $ python matchTXYZ.py template.xyz dealwith.xyz 
-# result a dealwith.xyz_2 file
+# result in a dealwith.xyz_2 file
 
 import sys
 
