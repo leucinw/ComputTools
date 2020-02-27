@@ -9,18 +9,28 @@
 from readDataFile import *
 
 # read tinker xyz file
-def readTXYZ(TXYZ):
-  lines = readWholeFile(TXYZ)[1:] #TINKER coordinate starts from second line
+def readTXYZ(TXYZ, singleAtom=False, tailOnly=False):
+  lines = open(TXYZ).readlines()[1:] 
   atoms=[];coord=[]
   order=[];types=[];connections=[]
+  tails = []
   for line in lines:
     data=line.split()
     order.append(data[0])
     types.append(data[5])
     connections.append(data[6:])
-    atoms.append(data[1])
+    idxstr = " " + data[5] + " "
+    idx = line.index(idxstr)
+    tails.append(line[idx:])
+    if singleAtom:
+      atoms.append(data[1][0])
+    else:
+      atoms.append(data[1])
     coord.append([float(data[2]), float(data[3]), float(data[4])])
-  return atoms,coord,order,types,connections
+  if tailOnly:
+    return tails
+  else:
+    return atoms,coord,order,types,connections
 
 # read gaussian output file
 def readLOG(LOG):
@@ -38,7 +48,7 @@ def readLOG(LOG):
         multip=(lines[n].split()[5])   
       if "NAtoms=" in lines[n]:
         natoms=int(lines[n].split()[1])   
-      if "Standard orientation" in lines[n] or "Input orientation" in lines[n]: # Coordinates from "Standard orientation" part
+      if ("Standard orientation" in lines[n]) or ("Input orientation" in lines[n]): 
         for m in range(5,5+natoms,1):
           data.append(lines[n+m][0:-1])
   for i in range(natoms):
@@ -49,9 +59,9 @@ def readLOG(LOG):
 # read gaussian input file
 def readCOM(COM):
   eTable = ['H','He','Li','Be','B','C','N','O',\
-                 'F','Ne','Na','Mg','Al','Si','P',\
-                 'S','Cl','Ar','K','Ca','Ti','Fe',\
-                 'Co','Ni','Cu','Zn',"Br", "I", "Cs"]
+            'F','Ne','Na','Mg','Al','Si','P',\
+            'S','Cl','Ar','K','Ca','Ti','Fe',\
+            'Co','Ni','Cu','Zn',"Br", "I", "Cs"]
   atoms=[];coord=[]
   lines = readWholeFile(COM)
   for line in lines:
@@ -116,7 +126,6 @@ def readTinkerOut(OUT):
 
 def readTinkerPRM(PRM, term):
   lines = readWholeFile(PRM)
-  
   # atom
   if term == "atom ":
     atoms = []

@@ -59,7 +59,7 @@ def main():
   usage = '''        ===============================================================
         qsub.py is a python script to submit jobs on Ren-Lab clusters.
         Files supported: psi4, gaussian, qchem, poltype.
-        $ qsub.py file.ext [node] [path]
+        $ leucinwSUB.py file.ext [node] [path]
         where file.ext is the input file, node and path are optional.
         ==============================================================='''
 

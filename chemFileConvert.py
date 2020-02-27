@@ -25,6 +25,7 @@
 #  XYZ2CBS:   From normal xyz file to psi4 file(CBS calculation)
 #  XYZ2ORCA:  From normal xyz file to ORCA input file 
 #  XYZ2CON:   From normal xyz file extract conection information
+#  SDF2PNG:   From sdf file to 2d structure image
 
 import sys
 import os,string
@@ -49,10 +50,10 @@ def COM2COM(COM):
   return True
 
 # 2. common xyz to com
-def XYZ2COM(XYZ, method="HF", basis="3-21G ", nproc="8", charge="0", multiplicity="1", jobtype="SP", memory="100GB"):
+def XYZ2COM(XYZ, method="HF", basis="3-21G ", nproc="8", charge="0", multiplicity="1", jobtype="SP", memory="100GB", extra= " "):
   chrgMult=charge + " " + multiplicity
   jobType = jobtype 
-  extraKeyword = " NoSymm MaxDisk=100GB "
+  extraKeyword = " NoSymm MaxDisk=100GB " + extra 
   data = readXYZ(XYZ)
   atoms = data[0];coord = data[1]
   fileName = XYZ.split(".xyz")[0]
@@ -66,15 +67,14 @@ def XYZ2COM(XYZ, method="HF", basis="3-21G ", nproc="8", charge="0", multiplicit
   return True
 
 def XYZ2COM_BSSE(XYZ, nfirst, chrgMult, optCartesian=False):
-  QM='MP2'
-  basis ='cc-pvtz '
+  #QM='CCSD(T)'
+  QM='mp2'
+  basis ='genECP '
   nproc     ='8'
-  #jobType = "Opt=tight "
-  jobType = "Opt "
+  jobType = "SP "
   if optCartesian == True:
     jobType = "Opt=(tight,Cartesian) "
-  #extraKeyword = " counterpoise=2 IOP(5/13=1) scf=tight Symmetry=None MaxDisk=100GB "
-  extraKeyword = " counterpoise=2 IOP(5/13=1) Symmetry=None MaxDisk=100GB "
+  extraKeyword = " counterpoise=2 IOP(5/13=1) Symmetry=None MaxDisk=100GB 5d 7f Pseudo=Read "
   data = readXYZ(XYZ)
   atoms = data[0];coord = data[1]
   fileName = XYZ.split(".xyz")[0]
@@ -172,7 +172,7 @@ def LOG2COM(LOG, counterpoise=False,optCartesian=False):
   pTable = {'1':'H','2':'He','3':'Li','4':'Be','5':'B','6':'C','7':'N','8':'O',\
                  '9':'F','10':'Ne','11':'Na','12':'Mg','13':'Al','14':'Si','15':'P',\
                  '16':'S','17':'Cl','18':'Ar','19':'K','20':'Ca','22':'Ti','26':'Fe',\
-                 '27':'Co','28':'Ni','29':'Cu','30':'Zn','35':'Br'}
+                 '27':'Co','28':'Ni','29':'Cu','30':'Zn','35':'Br', '62':"Sm"}
   data = readLOG(LOG)
   nproc = "8"
   QM = "MP2"
@@ -241,7 +241,7 @@ def LOG2XYZ(LOG):
   pTable = {'1':'H','2':'He','3':'Li','4':'Be','5':'B','6':'C','7':'N','8':'O',\
                  '9':'F','10':'Ne','11':'Na','12':'Mg','13':'Al','14':'Si','15':'P',\
                  '16':'S','17':'Cl','18':'Ar','19':'K','20':'Ca','22':'Ti','26':'Fe',\
-                 '27':'Co','28':'Ni','29':'Cu','30':'Zn','35':'Br'}
+                 '27':'Co','28':'Ni','29':'Cu','30':'Zn','35':'Br', '62':'Sm'}
   data = readLOG(LOG)
   coord = data[0]
   fileName = LOG.split(".out")[0]
@@ -298,8 +298,11 @@ def XYZ2MONO(XYZ, nfirst):
   oFile.close()
   return True
 
-def TXYZ2XYZ(TXYZ):
-  data = readTXYZ(TXYZ)
+def TXYZ2XYZ(TXYZ, sa=None):
+  if sa:
+    data = readTXYZ(TXYZ,singleAtom=True)
+  else:
+    data = readTXYZ(TXYZ)
   atoms = data[0];coord = data[1]
   fileName = TXYZ.split(".txyz")[0]
   fout=open(fileName+".xyz",'w')
@@ -467,11 +470,17 @@ def XYZ2ORCA(XYZ):
   fout.close()
   return True
 
-def XYZ2CON(XYZ):
+def xyz2con(xyz):
   connection = []
-  os.system("babel -ixyz %s -opdb tmp.pdb"%XYZ)
-  lines = readWholeFile("tmp.pdb")
+  os.system("babel -ixyz %s -opdb tmp.pdb"%xyz)
+  lines = readwholefile("tmp.pdb")
   for line in lines:
-    if "CONECT" in line:
+    if "conect" in line:
       connection.append(line[11:-1])
   return connection
+
+def SDF2PNG(SDF):
+  # make sure you can run obabel
+  cmdstr = "obabel -isdf %s -O %s.png -p 300"%(SDF, SDF.split(".")[0])
+  os.system(cmdstr)
+  return True
