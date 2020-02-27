@@ -11,7 +11,7 @@
 # $ python matchTXYZ.py template.xyz dealwith.xyz 
 # result a dealwith.xyz_2 file
 
-import os,sys
+import sys
 
 def readTXYZ(TXYZ, singleAtom=False, tailOnly=False):
   lines = open(TXYZ).readlines()[1:] 
@@ -79,6 +79,7 @@ def main():
     idx = int(newidx[i])
     f.write("%3s%3s%12.6f%12.6f%12.6f   %s"%(i+1,atoms[idx], coord[idx][0], coord[idx][1], coord[idx][2], tails[i]))
     f.close()
+  return
 
 if __name__ == "__main__":
   main()
