@@ -51,18 +51,14 @@ def fingerprint(TXYZ):
     fp.append(atm + fpstr)
   return fp
 
-def xyz2txyz(xyz):
-  txyz = xyz.replace("xyz", "txyz")
-  obstr = "obabel -ixyz %s -otxyz -O %s"%(xyz, txyz)
-  os.system(obstr)
-  return
-
 def main():
   template = sys.argv[1]
   dealwith = sys.argv[2]
   if os.path.splitext(dealwith)[1] == ".xyz":
-    xyz2txyz(dealwith)
+    xyz = dealwith
     dealwith = dealwith.replace("xyz", "txyz")
+    obstr = "obabel -ixyz %s -otxyz -O %s"%(xyz, dealwith)
+    os.system(obstr)
   fname = dealwith + "_2"
   fp1 = fingerprint(template)
   fp2 = fingerprint(dealwith)

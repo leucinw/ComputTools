@@ -8,14 +8,14 @@
 
 def readWholeFile(filename):
     data = []
-    for line in open(filename).readlines()
+    for line in open(filename).readlines():
       if len(line) != 0:
         data.append(line.split("\n")[0])
     return data
 
 def readOneColumn(filename,ncolum):
     data=[]
-    for line in open(filename).readlines()
+    for line in open(filename).readlines():
       strings=line.split()[ncolum]
       data.append(strings)
     return data
@@ -23,7 +23,7 @@ def readOneColumn(filename,ncolum):
 def readTwoColumns(filename):
     xdata=[]
     ydata=[]
-    for line in open(filename).readlines()
+    for line in open(filename).readlines():
       xdata.append(float(line.split()[0]))
       ydata.append(float(line.split()[1]))
     return xdata,ydata
@@ -32,7 +32,7 @@ def readThreeColumns(filename):
     xdata=[]
     ydata=[]
     zdata=[]
-    for line in open(filename).readlines()
+    for line in open(filename).readlines():
       xdata.append(float(line.split()[0]))
       ydata.append(float(line.split()[1]))
       zdata.append(float(line.split()[2]))
@@ -43,7 +43,7 @@ def readFourColumns(filename):
     ydata=[]
     zdata=[]
     wdata=[]
-    for line in open(filename).readlines()
+    for line in open(filename).readlines():
       xdata.append(float(line.split()[0]))
       ydata.append(float(line.split()[1]))
       zdata.append(float(line.split()[2]))
@@ -52,7 +52,7 @@ def readFourColumns(filename):
 
 def readKeywordLines(filename,keyword):
     xdata=[]
-    for line in open(filename).readlines()
+    for line in open(filename).readlines():
       if keyword in line:
         xdata.append(line)
     return xdata

@@ -7,64 +7,65 @@
 
 
 #  TXYZ2COM:  From TINKER xyz file to Gaussian input file
-#  LOG2COM:   From Gaussian output file to Gaussian input file
-#  COM2TXYZ:  From Gaussian input to TINKER XYZ file
-#  TXYZ2XYZ:  From TINKER xyz file to common XYZ file (most software readable)
+#   LOG2COM:   From Gaussian output file to Gaussian input file
+#   COM2COM:   From Gaussian input file to new input file
+#   XYZ2COM:   From common xyz file to Gaussian input file
+
+#   COM2TXYZ:  From Gaussian input to TINKER XYZ file
 #  TXYZ2TXYZ: From TINKER xyz file to a txyz file that all atoms are in order
-#  TXYZ2XYZi: From TINKER xyz file to common XYZ file without metal ion
-#  COM2XYZ:   From Gaussian input file to common XYZ file
+#    ARC2ARC:   From TINKER traj file to traj file
+#   XYZ2TXYZ:  From common XYZ to Tinker XYZ file
+
+#  TXYZ2XYZ:   From TINKER xyz file to common XYZ file (most software readable)
+#   COM2XYZ:   From Gaussian input file to common XYZ file
+#   LOG2XYZ:   From Gaussian output file to normal xyz file
+#   XYZ2XYZ:   From normal xyz file to normal xyz file in different distances
+#  XYZ2MONO:   From dimer xyz file to monomer xyz file
+
 #  XYZ2QCHEM: From common XYZ file to Qchem file
-#  COM2COM:   From Gaussian input file to new input file
-#  ARC2ARC:   From TINKER traj file to traj file
-#  XYZ2TXYZ:  From common XYZ to Tinker XYZ file
-#  XYZ2COM:   From common xyz file to Gaussian input file
-#  LOG2XYZ:   From Gaussian output file to normal xyz file
-#  XYZ2XYZ:   From normal xyz file to normal xyz file in different distances
-#  XYZ2MONO:  From dimer xyz file to monomer xyz file
 #  XYZ2PSI4:  From normal xyz file to psi4 file(SAPT calculation)
 #  XYZ2CBS:   From normal xyz file to psi4 file(CBS calculation)
 #  XYZ2ORCA:  From normal xyz file to ORCA input file 
 #  XYZ2CON:   From normal xyz file extract conection information
 #  SDF2PNG:   From sdf file to 2d structure image
 
-import sys
-import os,string
+import os
 from readChemFile import *
 from operation import *
+from chem import *
 
-#
-# XXX --> COM
-#
 # 1. com to com
 def COM2COM(COM):
-  data = readCOM(COM)
-  atoms = data[0];coord = data[1]
-  fileName = COM.split(".com")[0]
-  fout=open(fileName+".gjf",'w')
-  fout.write("%chk="+"%s.chk\n"%fileName)
-  fout.write("%nproc="+nproc+"\n%Mem=32GB\n#p "+QM+"/"+basis+extraKeyword+"%s\n\n%s \n\n%s\n"%(jobType,jobType,chrgMult))
-  for n in range(len(atoms)):
-    fout.write("%3s             %14.7f%14.7f%14.7f\n"%(atoms[n],float(coord[n][0]),float(coord[n][1]),float(coord[n][2])))
-  fout.write("\n")
-  fout.close()
-  return True
+  atoms, coord = readCOM(COM)
+  fileName = COM.replace(".com", "com_1")
+  with open(fileName, 'w') as fout: 
+    fout.write("%chk="+"%s.chk\n"%fileName.split(".com")[0])
+    fout.write("%nproc="+nproc+"\n%Mem=32GB\n#p "+QM+"/"+basis+extraKeyword+"%s\n\n%s \n\n%s\n"%(jobType,jobType,chrgMult))
+    for n in range(len(atoms)):
+      fout.write("%3s             %14.7f%14.7f%14.7f\n"%(atoms[n],float(coord[n][0]),float(coord[n][1]),float(coord[n][2])))
+    fout.write("\n")
+  return
 
 # 2. common xyz to com
-def XYZ2COM(XYZ, method="HF", basis="3-21G ", nproc="8", charge="0", multiplicity="1", jobtype="SP", memory="100GB", extra= " "):
+def XYZ2COM(XYZ, method="HF", basis="3-21G ", nproc="8", charge="0", multiplicity="1", jobtype="SP", memory="100GB", extra= " ", restraint = False):
   chrgMult=charge + " " + multiplicity
   jobType = jobtype 
-  extraKeyword = " NoSymm MaxDisk=100GB " + extra 
+  extraKeyword = " MaxDisk=100GB IOP(5/13=1)" + extra 
   data = readXYZ(XYZ)
   atoms = data[0];coord = data[1]
   fileName = XYZ.split(".xyz")[0]
-  fout=open(fileName+".com",'w')
-  fout.write("%chk="+"%s.chk\n"%fileName)
-  fout.write("%nproc="+nproc+"\n%Mem="+memory+"\n#p "+method+"/"+basis + extraKeyword + " %s\n\n%s \n\n%s\n"%(jobType,jobType,chrgMult))
-  for n in range(len(atoms)):
-    fout.write("%3s             %14.7f%14.7f%14.7f\n"%(atoms[n],float(coord[n][0]),float(coord[n][1]),float(coord[n][2])))
-  fout.write("\n")
-  fout.close()
-  return True
+  with open(fileName + ".com", 'w') as fout:
+    fout.write("%chk="+"%s.chk\n"%fileName)
+    fout.write("%nproc="+nproc+"\n%Mem="+memory+"\n#p "+method+"/"+basis + extraKeyword + " %s\n\n%s \n\n%s\n"%(jobType,jobType,chrgMult))
+    for n in range(len(atoms)):
+      fout.write("%3s             %14.7f%14.7f%14.7f\n"%(atoms[n],float(coord[n][0]),float(coord[n][1]),float(coord[n][2])))
+    fout.write("\n")
+    if restraint==True:
+      fout.write("* 1 2 * R\n")
+      fout.write("* 2 11 * R\n")
+      fout.write("4 1 2 11 F\n")
+      fout.write("1 2 11 12 F\n")
+  return 
 
 def XYZ2COM_BSSE(XYZ, nfirst, chrgMult, optCartesian=False):
   #QM='CCSD(T)'
@@ -118,18 +119,17 @@ def XYZ2PSI4(XYZ, nfirst, chrgMult_1, chrgMult_2, basis, saptDFT=False):
 
   return True
 
-def XYZ2CBS(XYZ, chrgMult):
-  data = readXYZ(XYZ)
-  atoms = data[0]
-  coord = data[1]
+def XYZ2CBS(XYZ, chrgMult = "0 1"):
+  atoms, coord = readXYZ(XYZ)
   fout=open(XYZ.split(".xyz")[0]+".psi4","w")
-  fout.write("#psi4\n#\nmemory 48 gb\n\nmolecule  {\n%s\n"%chrgMult)
+  fout.write("#psi4\n#\nmemory 20 gb\n\nmolecule  {\n%s\n"%chrgMult)
   for n in range(len(atoms)):
     fout.write("%3s   %14.7f%14.7f%14.7f\n"%(atoms[n],float(coord[n][0]),float(coord[n][1]),float(coord[n][2])))
   fout.write("units angstrom\nno_reorient  #important for SAPT in psi4, default\n")
   fout.write("symmetry c1  #important for SAPT in psi4, default\n}\n\n")
   fout.write("set {\nscf_type DF\nmp2_type DF\ne_convergence 7\nreference rhf\n}\n")
   fout.write("energy('mp2/aug-cc-pv[dt]z')\n")
+  #fout.write("energy(cbs, corl_wfn='mp2', corl_basis='aug-cc-pv[tq]z', delta_wfn='ccsd(t)', delta_basis='aug-cc-pv[dt]z')\n")
   return True
 
 # 3. tinker xyz to com
@@ -169,10 +169,6 @@ def TXYZ2COM(TXYZ, nfirst, counterpoise=False):
 
 # 4. gaussian log to com
 def LOG2COM(LOG, counterpoise=False,optCartesian=False):
-  pTable = {'1':'H','2':'He','3':'Li','4':'Be','5':'B','6':'C','7':'N','8':'O',\
-                 '9':'F','10':'Ne','11':'Na','12':'Mg','13':'Al','14':'Si','15':'P',\
-                 '16':'S','17':'Cl','18':'Ar','19':'K','20':'Ca','22':'Ti','26':'Fe',\
-                 '27':'Co','28':'Ni','29':'Cu','30':'Zn','35':'Br', '62':"Sm"}
   data = readLOG(LOG)
   nproc = "8"
   QM = "MP2"
@@ -208,10 +204,6 @@ def LOG2COM(LOG, counterpoise=False,optCartesian=False):
   return True
 
 def LOG2COM_BSSE(LOG, nfirst, optCartesian=False):
-  pTable = {'1':'H','2':'He','3':'Li','4':'Be','5':'B','6':'C','7':'N','8':'O',\
-                 '9':'F','10':'Ne','11':'Na','12':'Mg','13':'Al','14':'Si','15':'P',\
-                 '16':'S','17':'Cl','18':'Ar','19':'K','20':'Ca','22':'Ti','26':'Fe',\
-                 '27':'Co','28':'Ni','29':'Cu','30':'Zn','35':'Br'}
   data = readLOG(LOG)
   coord = data[0]
   QM='MP2'
@@ -237,120 +229,7 @@ def LOG2COM_BSSE(LOG, nfirst, optCartesian=False):
   fout.close()
   return True
 
-def LOG2XYZ(LOG):
-  pTable = {'1':'H','2':'He','3':'Li','4':'Be','5':'B','6':'C','7':'N','8':'O',\
-                 '9':'F','10':'Ne','11':'Na','12':'Mg','13':'Al','14':'Si','15':'P',\
-                 '16':'S','17':'Cl','18':'Ar','19':'K','20':'Ca','22':'Ti','26':'Fe',\
-                 '27':'Co','28':'Ni','29':'Cu','30':'Zn','35':'Br', '62':'Sm'}
-  data = readLOG(LOG)
-  coord = data[0]
-  fileName = LOG.split(".out")[0]
-  fout=open(fileName+".xyz",'w')
-  fout.write("%3s\n#Generated by chemFileConvert.py\n"%len(coord))
-  for n in range(len(coord)):
-    line=coord[n].split()
-    fout.write("%3s   %14.7f%14.7f%14.7f\n"%(pTable[line[1]],float(line[3]),float(line[4]),float(line[5])))
-  fout.close()
-  return True
 
-
-def COM2XYZ(COM):
-  data = readCOM(COM)
-  atoms = data[0]
-  coord = data[1]
-  oFile = open(COM.split(".")[0]+".xyz","w")
-  oFile.write("%3s\n#Generated by chemFileConvert.py\n"%len(atoms))
-  for i in range(len(atoms)):
-    oFile.write("%3s%14.7f%14.7f%14.7f\n"%(atoms[i], coord[i][0], coord[i][1], coord[i][2]))
-  oFile.close()
-  return True
-
-def XYZ2XYZ(XYZ, nfirst, refFirst, refSecond, dist_ratio):
-  data = readXYZ(XYZ)
-  atoms = data[0]
-  coord = data[1]
-  coord_1 = coord[:nfirst]
-  coord_2 = coord[nfirst:]
-  coord = f_translate(coord_1, coord_2, refFirst, refSecond, dist_ratio)
-  ratio = str("%.02f"%dist_ratio)
-  print("You are doing distance "+ratio)
-  oFile = open(XYZ.split(".")[0]+"_%s.xyz"%ratio,"w")
-  oFile.write("%3s\n#Generated by chemFileConvert.py\n"%len(atoms))
-  for i in range(len(atoms)):
-    oFile.write("%3s   %14.7f%14.7f%14.7f\n"%(atoms[i], coord[i][0], coord[i][1], coord[i][2]))
-  oFile.close()
-  return True
-
-def XYZ2MONO(XYZ, nfirst):
-  data = readXYZ(XYZ)
-  atoms = data[0]
-  coord = data[1]
-  nsecond = len(atoms) - nfirst
-  oFile = open(XYZ.split(".xyz")[0]+"_monomer1.xyz","w")
-  oFile.write("%3s\n#Generated by chemFileConvert.py\n"%nfirst)
-  for i in range(nfirst):
-    oFile.write("%3s   %14.7f%14.7f%14.7f\n"%(atoms[i], coord[i][0], coord[i][1], coord[i][2]))
-  oFile.close()
-  oFile = open(XYZ.split(".xyz")[0]+"_monomer2.xyz","w")
-  oFile.write("%3s\n#Generated by chemFileConvert.py\n"%nsecond)
-  for i in range(nfirst, len(atoms), 1):
-    oFile.write("%3s   %14.7f%14.7f%14.7f\n"%(atoms[i], coord[i][0], coord[i][1], coord[i][2]))
-  oFile.close()
-  return True
-
-def TXYZ2XYZ(TXYZ, sa=None):
-  if sa:
-    data = readTXYZ(TXYZ,singleAtom=True)
-  else:
-    data = readTXYZ(TXYZ)
-  atoms = data[0];coord = data[1]
-  fileName = TXYZ.split(".txyz")[0]
-  fout=open(fileName+".xyz",'w')
-  fout.write("%3s\n #Generated by chemFileConvert.py\n"%len(atoms))
-  for n in range(len(atoms)):
-    fout.write("%3s       %14.7f%14.7f%14.7f\n"%(atoms[n],float(coord[n][0]),float(coord[n][1]),float(coord[n][2])))
-  fout.close()
-  return True
-
-def TXYZ2XYZi(TXYZ):
-  data = readTXYZ(TXYZ)
-  atoms = data[0]; coord = data[1]
-  fileName = TXYZ.split(".txyz")[0]
-  fout=open(fileName+".xyz",'w')
-  fout.write("%3s\n#Generated by chemFileConvert.py\n"%(len(atoms)-1))
-  for n in range(len(atoms)-1):
-    fout.write("%3s             %14.7f%14.7f%14.7f\n"%(atoms[n],float(coord[n][0]),float(coord[n][1]),float(coord[n][2])))
-  fout.close()
-  return True
-
-def TXYZ2TXYZ(TXYZ):
-  data = readTXYZ(TXYZ)
-  atoms = data[0];coord = data[1]
-  order = data[2];types = data[3]
-  connections = data[4]
-  number = int(order[-1])-len(order)
-  for i in range(len(order)):
-    order[i]=int(order[i])-number
-
-  for i in range(len(connections)):
-    for j in range(len(connections[i])):
-      connections[i][j]=int(connections[i][j])-number
-
-  fileName = TXYZ.split(".xyz")[0]
-  fout=open(fileName+".xyz_1",'w')
-  fout.write("%3s #Generated by chemFileConvert.py\n"%len(atoms))
-  for n in range(len(atoms)):
-    if len(connections[n])==0:
-      fout.write("%6s%3s%14.7f%14.7f%14.7f%6s\n"%(order[n],atoms[n],float(coord[n][0]),float(coord[n][1]),float(coord[n][2]), types[n]))
-    if len(connections[n])==1:
-      fout.write("%6s%3s%14.7f%14.7f%14.7f%6s%3s\n"%(order[n],atoms[n],float(coord[n][0]),float(coord[n][1]),float(coord[n][2]), types[n], connections[n][0]))
-    if len(connections[n])==2:
-      fout.write("%6s%3s%14.7f%14.7f%14.7f%6s%3s%3s\n"%(order[n],atoms[n],float(coord[n][0]),float(coord[n][1]),float(coord[n][2]), types[n], connections[n][0], connections[n][1]))
-    if len(connections[n])==3:
-      fout.write("%6s%3s%14.7f%14.7f%14.7f%6s%3s%3s%3s\n"%(order[n],atoms[n],float(coord[n][0]),float(coord[n][1]),float(coord[n][2]), types[n], connections[n][0], connections[n][1], connections[n][2]))
-    if len(connections[n])==4:
-      fout.write("%6s%3s%14.7f%14.7f%14.7f%6s%3s%3s%3s%3s\n"%(order[n],atoms[n],float(coord[n][0]),float(coord[n][1]),float(coord[n][2]), types[n], connections[n][0], connections[n][1], connections[n][2], connections[n][3]))
-  fout.close()
   #os.system("mv %s.xyz %s"%(fileName, TXYZ))
   return True
 
@@ -470,7 +349,7 @@ def XYZ2ORCA(XYZ):
   fout.close()
   return True
 
-def xyz2con(xyz):
+def XYZ2CON(xyz):
   connection = []
   os.system("babel -ixyz %s -opdb tmp.pdb"%xyz)
   lines = readwholefile("tmp.pdb")

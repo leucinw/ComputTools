@@ -7,7 +7,7 @@
 
 
 from readDataFile import *
-
+from chem import *
 # read tinker xyz file
 def readTXYZ(TXYZ, singleAtom=False, tailOnly=False):
   lines = open(TXYZ).readlines()[1:] 
@@ -32,55 +32,57 @@ def readTXYZ(TXYZ, singleAtom=False, tailOnly=False):
   else:
     return atoms,coord,order,types,connections
 
-# read gaussian output file
+# read gaussian log file
 def readLOG(LOG):
-  data=[];coord=[]
-  natoms=0
-  reach_coordinate=0
-  f=open(LOG,'r')
-  while True:
+  atoms=[]; data =[]; coord=[]; chargeMultip=[]
+  with open(LOG) as f: 
     lines=f.readlines()
-    if not lines:break
     for n in range(len(lines)):
       if "Charge =" in lines[n]:
-        charge=(lines[n].split()[2])   
+        charge = (lines[n].split()[2])   
       if "Multiplicity =" in lines[n]:
-        multip=(lines[n].split()[5])   
+        multip = (lines[n].split()[5])   
       if "NAtoms=" in lines[n]:
         natoms=int(lines[n].split()[1])   
       if ("Standard orientation" in lines[n]) or ("Input orientation" in lines[n]): 
-        for m in range(5,5+natoms,1):
-          data.append(lines[n+m][0:-1])
-  for i in range(natoms):
-     coord.append(data[i-natoms])
-  f.close()
-  return coord,charge,multip
+        for m in range(5+n,5+natoms+n,1):
+          data.append(lines[m][0:-1])
+    chargeMultip = [charge, multip]  
+    for i in range(natoms):
+      d = data[i-natoms].split()
+      atoms.append(pTable[d[1]])
+      coord.append([float(d[3]), float(d[4]), float(d[5])])
+  return atoms,coord,chargeMultip
 
 # read gaussian input file
 def readCOM(COM):
-  eTable = ['H','He','Li','Be','B','C','N','O',\
-            'F','Ne','Na','Mg','Al','Si','P',\
-            'S','Cl','Ar','K','Ca','Ti','Fe',\
-            'Co','Ni','Cu','Zn',"Br", "I", "Cs"]
-  atoms=[];coord=[]
-  lines = readWholeFile(COM)
-  for line in lines:
-    if len(line.split())==4 and len(line)>38 and (line.split()[0] in eTable):
-      data = line.split()
-      atoms.append(data[0])
-      coord.append([float(data[1]), float(data[2]), float(data[3])])
-  return atoms,coord
+  atoms=[]; coord=[]; chargeMultip = []
+  cpcorr = False
+  for line in open(COM).readlines():
+    if line[0] == "#":
+      routeSec = line[:-1]
+      upperRouteSec = routeSec.upper()
+      if "COUNTERPOISE" in upperRouteSec:
+        cpcorr = True
+    if cpcorr == True:
+      if "Fragment" in line:
+        d = line.split()
+        atoms.append(d[0].split("(")[0])
+        coord.append([float(d[1]), float(d[2]), float(d[3])])
+    else:
+      if len(line.split()) == 4 and len(line) > 38 and (line.split()[0] in eTable):
+        d = line.split()
+        atoms.append(d[0])
+        coord.append([float(d[1]), float(d[2]), float(d[3])])
+  return atoms,coord,routeSec
 
 # read common xyz file
 def readXYZ(XYZ):
-  atoms = []
-  coord = []
-  lines = open(XYZ).readlines()
-  for line in lines[2:]:
-    data = line.split()
-    if len(data)==4:
-      atoms.append(data[0])
-      coord.append([float(data[1]), float(data[2]), float(data[3])])
+  atoms=[]; coord=[]
+  for line in open(XYZ).readlines()[2:]:
+    d = line.split()
+    atoms.append(d[0])
+    coord.append([float(d[1]), float(d[2]), float(d[3])])
   return atoms,coord
 
 def readPsi4Out(OUT):
@@ -169,4 +171,6 @@ def readTinkerPRM(PRM, term):
   if term == "strbnd ":
     strbndList = []
   return
-  
+#import sys
+#print(readLOG(sys.argv[1]) )
+#print(readCOM(sys.argv[1]) )
