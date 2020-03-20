@@ -8,6 +8,7 @@
 
 import os,time,sys,subprocess
 from colorama import Fore
+from multiprocessing import Pool
 
 usage = ''' Currently supported syntax:
   1. python lsub.py water1.com   [water2.com]   [..]
@@ -17,35 +18,49 @@ usage = ''' Currently supported syntax:
   5. python lsub.py *.qchem
   6. python lsub.py *.psi4
   '''
+# global list 
+checkExeList = ["psi4","g09","g16","dynamic.x","cp2k.ssmp","mpirun_qchem"]
 
-def checkNode(nodelistfile, checkExeList):
+def checkOneNode(eachNode):
+  njobs = 0
+  cmdstr = "ssh %s 'top -n1 -b' >top.%s"%(eachNode,eachNode)
+  subprocess.run(cmdstr, shell=True)
+  topfile = "top.%s"%eachNode
+  linestr = ''.join(open(topfile).readlines())
+  for exe in checkExeList:
+    njobs += linestr.count(exe)
+  rmstr = "rm -rf top.%s"%eachNode
+  subprocess.run(rmstr, shell=True)
+  return eachNode, njobs
+
+
+def checkAllNodes(nodelistfile):
+  print(Fore.RED + "Checking nodes ...")
   Nodes = []; nJobs = []; idleNodes = []
   for line in open(nodelistfile).readlines():
     if "#" not in line[:1]:
       d = line.split()
       Nodes.append(d[0])
       nJobs.append(int(d[1]))
-  for node,nJob in zip(Nodes, nJobs):
-    njobs = 0
-    subprocess.run("rm -rf top.tmp", shell=True)
-    cmdstr = "ssh %s 'top -n1 -b' >top.tmp"%node
-    subprocess.run(cmdstr,shell=True)
-    linestr = ''.join(open("top.tmp").readlines())
-    for exe in checkExeList:
-      njobs += linestr.count(exe)
-    num = nJob - njobs
+
+  p = Pool(len(Nodes))
+  results = dict(p.map(checkOneNode, Nodes))
+  p.close()
+  p.join()
+  for node, nJob in zip(Nodes, nJobs):
+    num = nJob - results[node] 
     idleNodes += [node]*num
   return idleNodes
 
 def checkJobs(filelist):
   fileToSubmit = []
   fileformats = [".qchem", ".psi4", ".com"]
-  _, ext = os.path.splitext(open(filelist).readlines()[0][:-1])
-  if ext in fileformats: 
-    for f in open(filelist).readlines():
-      fname, end = os.path.splitext(f[:-1])
+  for files in filelist:
+    _, ext = os.path.splitext(files)
+    if ext in fileformats: 
+      fname, end = os.path.splitext(files)
       if not os.path.isfile(fname + ".log"):
-        fileToSubmit.append(f[:-1])
+        fileToSubmit.append(files)
   return fileToSubmit 
 
 def subOneJob(node, input_file):
@@ -70,51 +85,41 @@ def subOneJob(node, input_file):
   subprocess.run(cmdstr,shell=True)
   return
 
-def subMultipleJobs(filelist, nodelistfile, checkExeList):
+def subMultipleJobs(filelist, nodelistfile):
   currentJob = 0
-  checkTime = 1.0 
+  checkTime = 0.5 
   files = checkJobs(filelist)
   while(currentJob != len(files)):
-    idleNodes = checkNode(nodelistfile, checkExeList)
+    idleNodes = checkAllNodes(nodelistfile)
     if (idleNodes == []):
       print(Fore.RED + "No idle nodes ! Wait for %s minute(s) !"%checkTime)
-      time.sleep(60.0*checkTime)
+      time.sleep(30.0*checkTime)
     else:
       for eachNode in idleNodes:
         if (currentJob == len(files)):break
         subOneJob(eachNode,files[currentJob])
         print(Fore.GREEN + "Submitted %s on %s!"%(files[currentJob], eachNode))
         currentJob += 1
-      time.sleep(60.0*checkTime)
+      time.sleep(30.0*checkTime)
   return 
 
 def main():
   filelist = []
   jobtype = ''
   if len(sys.argv) > 1:
-    if len(sys.argv) == 2:
-      fname, ext = os.path.splitext(sys.argv[1])
-      jobtype = ext[1:].upper()
-      if fname == "*":
-        files = os.listdir(os.getcwd())
-        for eachfile in files:
-          if os.path.splitext(eachfile)[-1] == ext:
-            filelist.append(eachfile)
-      else:
-        filelist.append(sys.argv[2])
-    else:
-      filelist = sys.argv[2:]
+    filelist = sys.argv[1:]
+    _, ext = os.path.splitext(filelist[0])
+    jobtype = ext[1:].upper()
   else:
     print(Fore.RED + usage)
- 
 
-  checkExeList = ["psi4","g09","g16","dynamic.x","cp2k.ssmp","mpirun_qchem"]
+  supportedTypes = ["COM", "PSI4",  "QCHEM"]
   nodeDict = {"COM"  : "/home/liuchw/bin/GaussianNode",\
               "PSI4" : "/home/liuchw/bin/Psi4Node", \
               "QCHEM": "/home/liuchw/bin/QChemNode"}
 
-  if (filelist  != []):
-    subMultipleJobs(filelist, nodeDict[jobtype], checkExeList)
+  if (filelist  != []) and (jobtype in supportedTypes):
+    subMultipleJobs(filelist, nodeDict[jobtype])
   return 
 
 if __name__ == '__main__':
