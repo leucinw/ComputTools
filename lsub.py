@@ -19,7 +19,7 @@ usage = ''' Currently supported syntax:
   6. python lsub.py *.psi4
   '''
 # global list 
-checkExeList = ["psi4","g09","g16","dynamic.x","cp2k.ssmp","mpirun_qchem"]
+checkExeList = ["psi4","g09","g16","dynamic.x","cp2k.ssmp","mpirun_qchem", "bar_omm.x", "dynamic_omm.x"]
 
 def checkOneNode(eachNode):
   njobs = 0
@@ -72,16 +72,18 @@ def subOneJob(node, input_file):
     exestr = "nohup qchem -nt 8 %s.qchem %s.log >log.sub 2>err.sub &"%(f,f)
     cmdstr = 'ssh %s "source %s; cd %s; %s" &'%(node,srcfile,cwd,exestr)
   # psi4 
-  if ext == ".psi4":
+  elif ext == ".psi4":
     srcfile = "/home/liuchw/.bashrc.poltype"
     jobtype = "psi4"
     exestr = "nohup psi4 -n 8 -i %s.psi4 -o %s.log 2>err.sub &"%(f, f)
     cmdstr = 'ssh %s "source %s; cd %s; %s" &' % (node, srcfile, cwd, exestr)
   # gaussian
-  if ext == ".com":
-    srcfile = "/home/liuchw/.bashrc.G16"
-    exestr = "nohup g16 %s.com %s.log 2>err.sub &"%(f, f)
+  elif ext == ".com":
+    srcfile = "/home/liuchw/.bashrc.G09"
+    exestr = "nohup g09 %s.com %s.log 2>err.sub &"%(f, f)
     cmdstr = 'ssh %s "source %s; cd %s; %s" &' % (node, srcfile, cwd, exestr)
+  else:
+    cmdstr = "echo 'file format not supported!'"
   subprocess.run(cmdstr,shell=True)
   return
 
@@ -93,14 +95,17 @@ def subMultipleJobs(filelist, nodelistfile):
     idleNodes = checkAllNodes(nodelistfile)
     if (idleNodes == []):
       print(Fore.RED + "No idle nodes ! Wait for %s minute(s) !"%checkTime)
-      time.sleep(30.0*checkTime)
+      time.sleep(60.0*checkTime)
     else:
       for eachNode in idleNodes:
         if (currentJob == len(files)):break
         subOneJob(eachNode,files[currentJob])
         print(Fore.GREEN + "Submitted %s on %s!"%(files[currentJob], eachNode))
         currentJob += 1
-      time.sleep(30.0*checkTime)
+      if (currentJob == len(files)):
+        break
+      else:
+        time.sleep(60.0*checkTime)
   return 
 
 def main():
@@ -120,6 +125,8 @@ def main():
 
   if (filelist  != []) and (jobtype in supportedTypes):
     subMultipleJobs(filelist, nodeDict[jobtype])
+  else:
+    print(Fore.RED + "Your jobs are NOT submitted!")
   return 
 
 if __name__ == '__main__':

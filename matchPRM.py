@@ -55,7 +55,6 @@ def matchAllTerms(templateprm, templatexyz, dealwithxyz, term):
   #
   _,_,_,types,_ = readTXYZ(dealwithxyz)
   typesDict = {}
-  ttt = open(termDict[term.lower()], "w")
   for i in range(len(types)):
     typesDict[i+1] = types[i]
 
@@ -81,6 +80,7 @@ def matchAllTerms(templateprm, templatexyz, dealwithxyz, term):
   # map the parameters back to new types
   #
   repeated = []
+  ttt = open(termDict[term.lower()], "w")
   for i in range(idx, len(lines), 1):
     if term.lower() == "bond":
       a1, a2, ks, bnd = lines[i].split()[1:5]
@@ -88,27 +88,27 @@ def matchAllTerms(templateprm, templatexyz, dealwithxyz, term):
       a2_ = typesDict[int(a2)]
       prmstr = ' '.join([ks, bnd])
       atomliststr = 2*"%5s"%(a1_, a2_)
-    if term.lower() == "pitors":
+    elif term.lower() == "pitors":
       a1, a2, ks = lines[i].split()[1:4]
       a1_ = typesDict[int(a1)]
       a2_ = typesDict[int(a2)]
       prmstr = ks 
       atomliststr = 2*"%5s"%(a1_, a2_)
-    if term.lower() == "angle":
+    elif term.lower() == "angle":
       a1, a2, a3, kb, ang = lines[i].split()[1:6]
       a1_ = typesDict[int(a1)]
       a2_ = typesDict[int(a2)]
       a3_ = typesDict[int(a3)]
       prmstr = ' '.join([kb, ang])
       atomliststr = 3*"%5s"%(a1_, a2_, a3_)
-    if term.lower() == "strbnd":
+    elif term.lower() == "strbnd":
       a1, a2, a3, ksb1, ksb2 = lines[i].split()[1:6]
       a1_ = typesDict[int(a1)]
       a2_ = typesDict[int(a2)]
       a3_ = typesDict[int(a3)]
       prmstr = ' '.join([ksb1, ksb2])
       atomliststr = 3*"%5s"%(a1_, a2_, a3_)
-    if term.lower() == "opbend":
+    elif term.lower() == "opbend":
       a1, a2, a3, a4, kopb = lines[i].split()[1:6]
       a1_ = typesDict[int(a1)]
       a2_ = typesDict[int(a2)]
@@ -116,7 +116,7 @@ def matchAllTerms(templateprm, templatexyz, dealwithxyz, term):
       a4_ = typesDict[int(a4)]
       atomliststr = 4*"%5s"%(a1_, a2_, a3_, a4_)
       prmstr = ' '.join([kopb])
-    if term.lower() == "torsion":
+    elif term.lower() == "torsion":
       a1, a2, a3, a4 = lines[i].split()[1:5]
       if "0/1" in lines[i]:
         index = int(lines[i].split().index("0/1")) - 1
@@ -139,7 +139,9 @@ def matchAllTerms(templateprm, templatexyz, dealwithxyz, term):
       a4_ = typesDict[int(a4)]
       atomliststr = 4*"%5s"%(a1_, a2_, a3_, a4_)
       prmstr = ' '.join([onefold_, twofold_, threefold_])
-
+    else:
+      print("%s currently not supported!")
+      break
     #
     # write out parameters    
     #
