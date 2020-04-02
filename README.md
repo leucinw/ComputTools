@@ -12,9 +12,9 @@ __Email__: `liuchw2010@gmail.com`
 
 - bondangle.py: calculate bond and angle for a given xyz/txyz file
 - chem.py: module for chemistry
-- chemFileConvert.py: convert a variety formats of chemical files from one to another
 - dipoleCOC2COM.py: convert the dipole moment from Center Of nuclear Charge to Center Of Mass origin. COC dipoles are from Gaussian output.
 - geomFunction.py: some functions define the geometrical maths. distance, geometry center ...
+- lconvert.py: convert a variety formats of chemical files from one to another
 - lsub.py: automatically detect and submit QM jobs on clusters 
 - matchPRM.py: mapping the amoeba parameters to new atom types 
 - matchTXYZ.py: mapping one tinker xyz file to another 
