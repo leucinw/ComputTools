@@ -225,6 +225,7 @@ def main():
     ToXYZ(fi, fo)
   else:
     print(Fore.RED + "File format '%s' not supported!"%to)
+  return
 
 if __name__ == "__main__":
   main()
