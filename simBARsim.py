@@ -86,8 +86,8 @@ def main():
   def dynamic():
     for i in range(len(orderparams)):
       tmp = orderparams[i]
-      dirname = os.path.join(currDir, fname, "-%03d-%03d"%((int(float(tmp[0])*100)), (int(float(tmp[1])*100))))
-      if os.path.isfile(os.path.join(dirname, argDict["TINKERXYZ"].replace(".xyz",".arc")):
+      dirname = os.path.join(currDir, fname+"-%03d-%03d"%((int(float(tmp[0])*100)), (int(float(tmp[1])*100))))
+      if os.path.isfile(os.path.join(dirname, argDict["TINKERXYZ"].replace(".xyz",".arc"))):
         print(" .arc file exists in %s !"%dirname)
       else:
         sub(nodelist[i], argDict["DYNAMICRUN"], dirname) 
@@ -97,8 +97,8 @@ def main():
   def bar():
     for i in range(len(orderparams)-1):
       tmp = orderparams[i]
-      dirname = os.path.join(currDir, fname, "-%03d-%03d"% ((int(float(tmp[0])*100)), (int(float(tmp[1])*100))))
-      if os.path.isfile(os.path.join(dirname, argDict["TINKERXYZ"].replace(".xyz", ".bar")):
+      dirname = os.path.join(currDir, fname+"-%03d-%03d"% ((int(float(tmp[0])*100)), (int(float(tmp[1])*100))))
+      if os.path.isfile(os.path.join(dirname, argDict["TINKERXYZ"].replace(".xyz", ".bar"))):
         print(" .bar file exists in %s !"%dirname)
         subprocess.run("rm -f %s"%os.path.join(dirname, argDict["TINKERXYZ"].replace(".xyz",".bar")),shell=True)
         sub(nodelist[i], argDict["BARRUN"], dirname)
@@ -114,7 +114,7 @@ def main():
     Dir = []
     for i in range(len(orderparams)-1):
       tmp = orderparams[i]
-      dirname = os.path.join(currDir, fname, "-%03d-%03d"% ((int(float(tmp[0])*100)), (int(float(tmp[1])*100))))
+      dirname = os.path.join(currDir, fname+"-%03d-%03d"% ((int(float(tmp[0])*100)), (int(float(tmp[1])*100))))
       Dir.append(fname+"-%03d-%03d"%((int(float(tmp[0])*100)), (int(float(tmp[1])*100))))
       if os.path.isfile(os.path.join(dirname, "freeEnergy.log")):
         for line in open(os.path.join(dirname,"freeEnergy.log")).readlines():
