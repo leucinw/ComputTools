@@ -75,7 +75,7 @@ def main():
     f.write("%3s\n"%len(atoms))
     for i in range(len(newidx)):
       idx = int(newidx[i])
-      f.write("%3s%3s%12.6f%12.6f%12.6f   %s"%(i+1,atoms[idx], coord[idx][0], coord[idx][1], coord[idx][2], tails[i]))
+      f.write("%3s%3s%12.6f%12.6f%12.6f   %s\n"%(i+1,atoms[idx], coord[idx][0], coord[idx][1], coord[idx][2], tails[i]))
   return
 
 if __name__ == "__main__":
