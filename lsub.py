@@ -25,13 +25,16 @@ checkExeList = ["psi4","g09","g16","dynamic.x","cp2k.ssmp","mpirun_qchem", "orca
 def checkOneNode(eachNode):
   njobs = 0
   cmdstr = "ssh %s 'top -n1 -b' >top.%s"%(eachNode,eachNode)
-  subprocess.run(cmdstr, shell=True)
-  topfile = "top.%s"%eachNode
-  linestr = ''.join(open(topfile).readlines())
-  for exe in checkExeList:
-    njobs += linestr.count(exe)
-  rmstr = "rm -rf top.%s"%eachNode
-  subprocess.run(rmstr, shell=True)
+  try:
+    subprocess.run(cmdstr, shell=True)
+    topfile = "top.%s"%eachNode
+    linestr = ''.join(open(topfile).readlines())
+    for exe in checkExeList:
+      njobs += linestr.count(exe)
+    rmstr = "rm -rf top.%s"%eachNode
+    subprocess.run(rmstr, shell=True)
+  except:
+    pass
   return eachNode, njobs
 
 
