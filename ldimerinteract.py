@@ -29,9 +29,9 @@ def rotMatrix(axis, theta):
   b, c, d = -axis*np.sin(theta/2.0)
   aa, bb, cc, dd = a*a, b*b, c*c, d*d
   bc, ad, ac, ab, bd, cd = b*c, a*d, a*c, a*b, b*d, c*d
-  rotmat = np.array([[aa+bb-cc-dd, 2*(bc+ad), 2*(bd-ac)] ,
-                     [2*(bc-ad), aa+cc-bb-dd, 2*(cd+ab)] ,
-                     [2*(bd+ac), 2*(cd-ab), aa+dd-bb-cc]] )
+  rotmat = np.array([[aa+bb-cc-dd, 2.0*(bc+ad), 2.0*(bd-ac)] ,
+                     [2.0*(bc-ad), aa+cc-bb-dd, 2.0*(cd+ab)] ,
+                     [2.0*(bd+ac), 2.0*(cd-ab), aa+dd-bb-cc]] )
   return rotmat
 
 def main():
@@ -41,7 +41,7 @@ def main():
   parser.add_argument('-m2',  dest = 'mono2', required=True)  
   parser.add_argument('-p2',  dest = 'point2', required=True)  
   parser.add_argument('-o',   dest = 'dimer', required=True)
-  parser.add_argument('-d',   dest = 'distance', required=True)
+  parser.add_argument('-d',   dest = 'distance', default=1.0)
   parser.add_argument('-w',   dest = 'weight', default=10)
   args = vars(parser.parse_args())
   mono1 = args["mono1"]
@@ -49,12 +49,19 @@ def main():
   p1 = int(args["point1"])
   p2 = int(args["point2"])
   dimer = args["dimer"]
-  dist = float(args["distance"])
+  distratio = float(args["distance"])
   weight = float(args["weight"])
+  vdwradius = {"H" : 1.20, "Li": 1.82, "Na": 2.27, "K": 2.75, "Rb": 3.03, "Cs": 3.43, \
+               "Be": 1.53, "Mg": 1.73, "Ca": 2.31, "B": 1.92, "C": 1.70, "N": 1.55, "O":1.52\
+               "P" : 1.80, "S" : 1.80, "F" : 1.47, "Cl":1.75, "Br":1.85, "Zn":1.39}           
   
   atoms1, coords1 = readXYZ(mono1)
   atoms2, coords2 = readXYZ(mono2)
   coords1 = coords1 - coords1[p1-1]
+  
+  a1 = atoms1[p1-1]
+  a2 = atoms2[p2-1]
+  dist = distratio*(vdwradius[a1]+vdwradius[a2])
 
   def costfunc(params):
     func = 0.0
@@ -82,7 +89,7 @@ def main():
     return func
  
   x0 = np.ones(7)
-  ret = minimize(costfunc, x0, method='SLSQP', jac=None, bounds=None, options={'disp': True, 'iprint': 1,  'eps': 1.e-8, 'maxiter': 100, 'ftol': 1e-10})
+  ret = minimize(costfunc, x0, method='SLSQP', jac=None, bounds=None, options={'disp': True, 'iprint': 1,  'eps': 1.e-8, 'maxiter': 100, 'ftol': 1e-6})
   np.savetxt("p0.txt", ret.x,fmt='%15.10f')
 
   coord_opt = np.array(ret.x[:3])
