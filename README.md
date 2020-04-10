@@ -15,6 +15,7 @@ Copyright: Chengwen Liu
 * [x] firstMolecule.py: find the number of atoms in the first molecule of a molecular cluster
 * [x] geomFunction.py: some functions define the geometrical maths. distance, geometry center ...
 * [x] lconvert.py: convert a variety formats of chemical files from one to another
+* [x] ldensity.py: calculate instant density from tinker/tinker-openmm trajectory file(arc) 
 * [x] ldimerinteract.py: generate structure of dimer cluster of interested interactions
 * [x] lsub.py: automatically detect and submit QM jobs on clusters 
 * [x] matchPRM.py: mapping the amoeba parameters to new atom types 
