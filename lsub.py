@@ -17,41 +17,44 @@ usage = ''' Currently supported syntax:
           4. python lsub.py *.com
           5. python lsub.py *.qchem
           6. python lsub.py *.psi4
+          7. python lsub.py dynamic_omm.cuda
   '''
 
 # global list 
-checkExeList = ["psi4","g09","g16","dynamic.x","cp2k.ssmp","mpirun_qchem", "orca_mp2_mpi"]
+CPU_ExeList = ["psi4","g09","g16","dynamic.x","cp2k.ssmp","mpirun_qchem", "orca_mp2_mpi"]
+GPU_ExeList = ["dynamic_omm.x","bar_omm.x", "pmemd"]
 
-def checkOneNode(eachNode):
-  njobs = 0
-  cmdstr = "ssh %s 'top -n1 -b' >top.%s 2>top.err"%(eachNode,eachNode)
+def checkOneNode(eachNode, GPU_Job):
+  nCPUjobs = 0
+  nGPUjobs = 0
+  cmdstr = "ssh %s 'top -n1 -b'"%eachNode
   try:
-    subprocess.run(cmdstr, shell=True)
-    topfile = "top.%s"%eachNode
-    linestr = ''.join(open(topfile).readlines())
-    for exe in checkExeList:
-      njobs += linestr.count(exe)
-    rmstr = "rm -rf top.%s"%eachNode
-    subprocess.run(rmstr, shell=True)
+    topstr = subprocess.check_output(cmdstr, shell=True).decode("utf-8")
+    linestr = ''.join(list(topstr))
+    for exe in GPU_ExeList:
+      nGPUjobs += linestr.count(exe)
+    for exe in CPU_ExeList:
+      nCPUjobs += linestr.count(exe)
   except:
     pass
-  return eachNode, njobs
+  if GPU_Job:
+    return eachNode, nGPUjobs
+  else:
+    return eachNode, nCPUjobs
 
-
-def checkAllNodes(nodelistfile):
+def checkAllNodes(nodelistfile, GPU_Job):
   print(Fore.RED + "Checking nodes ...")
   Nodes = []; nJobs = []; idleNodes = []
   for line in open(nodelistfile).readlines():
     if "#" not in line[:1]:
       d = line.split()
-      Nodes.append(d[0])
+      Nodes.append([d[0], GPU_Job])
       nJobs.append(int(d[1]))
-
   p = Pool(len(Nodes))
-  results = dict(p.map(checkOneNode, Nodes))
+  results = dict(p.starmap(checkOneNode,Nodes))
   p.close()
   p.join()
-  for node, nJob in zip(Nodes, nJobs):
+  for [node,_], nJob in zip(Nodes, nJobs):
     num = nJob - results[node] 
     idleNodes += [node]*num
   return idleNodes
@@ -67,8 +70,8 @@ def checkJobs(filelist):
         fileToSubmit.append(files)
   return fileToSubmit 
 
-def subOneJob(node, input_file):
-  f, ext = os.path.splitext(input_file)
+def subOneJob(node, inputFile):
+  f, ext = os.path.splitext(inputFile)
   cwd = os.getcwd()
   # qchem 
   if ext == ".qchem":
@@ -79,24 +82,31 @@ def subOneJob(node, input_file):
   elif ext == ".psi4":
     srcfile = "/home/liuchw/.bashrc.poltype"
     jobtype = "psi4"
-    exestr = "nohup psi4 -n 8 -i %s.psi4 -o %s.log 2>err.sub &"%(f, f)
+    exestr = "nohup psi4 -n 6 -i %s.psi4 -o %s.log >log.sub 2>err.sub &"%(f, f)
     cmdstr = 'ssh %s "source %s; cd %s; %s" &' % (node, srcfile, cwd, exestr)
   # gaussian
   elif ext == ".com":
     srcfile = "/home/liuchw/.bashrc.G09"
-    exestr = "nohup g09 %s.com %s.log 2>err.sub &"%(f, f)
+    exestr = "nohup g09 %s.com %s.log >log.sub 2>err.sub &"%(f, f)
     cmdstr = 'ssh %s "source %s; cd %s; %s" &' % (node, srcfile, cwd, exestr)
+  # cuda 
+  elif ext == ".cuda":
+    exestr = "nohup sh %s >log.sub 2>err.sub &"%inputFile
+    cmdstr = 'ssh %s "cd %s; %s" &' % (node, cwd, exestr)
   else:
     cmdstr = "echo 'file format not supported!'"
   subprocess.run(cmdstr,shell=True)
   return
 
-def subMultipleJobs(filelist, nodelistfile):
+def subMultipleJobs(filelist, nodelistfile, GPU_Job):
   currentJob = 0
-  checkTime = 0.5 
-  files = checkJobs(filelist)
+  checkTime = 0.5
+  if not GPU_Job: 
+    files = checkJobs(filelist)
+  else:
+    files = filelist
   while(currentJob != len(files)):
-    idleNodes = checkAllNodes(nodelistfile)
+    idleNodes = checkAllNodes(nodelistfile, GPU_Job)
     if (idleNodes == []):
       print(Fore.RED + "No idle nodes ! Wait for %s minute(s) !"%checkTime)
       time.sleep(60.0*checkTime)
@@ -122,10 +132,16 @@ def main():
   else:
     print(Fore.RED + usage)
 
-  supportedTypes = ["COM", "PSI4",  "QCHEM"]
+  if jobtype == "CUDA":
+    GPU_Job = True
+  else:
+    GPU_Job = False
+
+  supportedTypes = ["COM", "PSI4",  "QCHEM", "CUDA"]
   nodeDict = {"COM"  : "/home/liuchw/bin/GaussianNode",\
               "PSI4" : "/home/liuchw/bin/Psi4Node", \
-              "QCHEM": "/home/liuchw/bin/QChemNode"}
+              "QCHEM": "/home/liuchw/bin/QChemNode", \
+              "CUDA":  "/home/liuchw/bin/CudaNode"}
   if (jobtype not in supportedTypes):
     print(Fore.RED + "%s files not supported!" %jobtype)
     sys.exit(1)
@@ -140,7 +156,7 @@ def main():
     sortedfilelist=[]
     for pair in pairs:
       sortedfilelist.append(pair[1])
-    subMultipleJobs(sortedfilelist, nodeDict[jobtype])
+    subMultipleJobs(sortedfilelist, nodeDict[jobtype], GPU_Job)
   return 
 
 if __name__ == '__main__':
