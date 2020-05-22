@@ -26,7 +26,7 @@
   * If you use some of them do your research, an explicit acknowledgement in your manuscript would be great! :)
 
 ### Author
-  * [Chengwen Liu](github.com/leucinw)
+  * [Chengwen Liu](https://github.com/leucinw)
 
 ### Contributors
-  * [zjing7](github.com/zjing7) 
+  * [zjing7](https://github.com/zjing7) 
