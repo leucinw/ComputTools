@@ -59,6 +59,14 @@ def checkAllNodes(nodelistfile, GPU_Job):
     idleNodes += [node]*num
   return idleNodes
 
+def checkMem(node, nodelistfile):
+  for line in open(nodelistfile).readlines():
+    if ("#" not in line) and (line !="\n"):
+      if node in line:
+        mem = int(line.split()[2])
+  return mem
+
+
 def checkJobs(filelist):
   fileToSubmit = []
   fileformats = [".qchem", ".psi4", ".com"]
@@ -82,8 +90,16 @@ def subOneJob(node, inputFile):
   elif ext == ".psi4":
     srcfile = "/home/liuchw/.bashrc.poltype"
     jobtype = "psi4"
-    exestr = "nohup psi4 -n 6 -i %s.psi4 -o %s.log >log.sub 2>err.sub &"%(f, f)
-    cmdstr = 'ssh %s "source %s; cd %s; %s" &' % (node, srcfile, cwd, exestr)
+    memmax = checkMem(node, "/home/liuchw/bin/Psi4Node")
+    lines = open(inputFile).readlines()
+    for line in lines:
+      if "MEM" in line.upper():
+        mem = int(line.split()[1])
+    if mem < memmax:
+      exestr = "nohup psi4 -n 8 -i %s.psi4 -o %s.log >log.sub 2>err.sub &"%(f, f)
+      cmdstr = 'ssh %s "source %s; cd %s; %s" &' % (node, srcfile, cwd, exestr)
+    else:
+      cmdstr = "echo 'memory not big enough on %s !' "%node
   # gaussian
   elif ext == ".com":
     srcfile = "/home/liuchw/.bashrc.G09"
@@ -108,7 +124,7 @@ def subMultipleJobs(filelist, nodelistfile, GPU_Job):
   while(currentJob != len(files)):
     idleNodes = checkAllNodes(nodelistfile, GPU_Job)
     if (idleNodes == []):
-      print(Fore.RED + "No idle nodes ! Wait for %s minute(s) !"%checkTime)
+      #print(Fore.RED + "No idle nodes ! Wait for %s minute(s) !"%checkTime)
       time.sleep(60.0*checkTime)
     else:
       for eachNode in idleNodes:
