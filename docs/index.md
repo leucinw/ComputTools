@@ -1,5 +1,3 @@
-## ComputTools
-
 ### Reminder 
   * These programs are being actively updated
   * Their correctness is not always guaranteed 
