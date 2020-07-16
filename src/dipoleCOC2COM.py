@@ -13,7 +13,7 @@ gaufile = sys.argv[1]
 lines = open(gaufile).readlines()
 
 for line in lines:
-  if "Standard orientation" in line:
+  if ("Standard orientation" in line) or ("Input orientation" in line):
     idx = lines.index(line) + 5
   if "Sum of Mulliken charges" in line:
     charge = float(line.split()[-1])
