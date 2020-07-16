@@ -104,6 +104,8 @@ def subOneJob(node, inputFile):
   elif ext == ".com":
     srcfile = "/home/liuchw/.bashrc.G09"
     exestr = "nohup g09 %s.com %s.log >log.sub 2>err.sub &"%(f, f)
+    #srcfile = "/home/liuchw/.bashrc.G16"
+    #exestr = "nohup g16 %s.com %s.log >log.sub 2>err.sub &"%(f, f)
     cmdstr = 'ssh %s "source %s; cd %s; %s" &' % (node, srcfile, cwd, exestr)
   # cuda 
   elif ext == ".cuda":
