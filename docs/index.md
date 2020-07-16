@@ -14,6 +14,7 @@
   * [x] ldensity.py: calculate instant density from tinker/tinker-openmm trajectory file(arc) 
   * [x] ldimerinteract.py: generate structure of dimer cluster of interested interactions
   * [x] lsub.py: automatically detect and submit QM jobs on clusters 
+  * [x] ltranslate.py: translate the second molecule according to specified intermolecular distance 
   * [x] matchPRM.py: mapping the amoeba parameters to new atom types 
   * [x] matchTXYZ.py: mapping one tinker xyz file to another 
   * [x] operation.py: operation of molecules in Cartesian dimension. translation, rotation, ...
@@ -26,7 +27,7 @@
   * If you use some of them do your research, an explicit acknowledgement in your manuscript would be great! :)
 
 ### Author
-  * [Chengwen Liu](https://github.com/leucinw)
+  * [Chengwen Liu](http://leucinw.com)
 
 ### Contributors
   * [zjing7](https://github.com/zjing7) 
