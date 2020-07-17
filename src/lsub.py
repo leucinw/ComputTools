@@ -88,7 +88,8 @@ def subOneJob(node, inputFile):
     cmdstr = 'ssh %s "source %s; cd %s; %s" &'%(node,srcfile,cwd,exestr)
   # psi4 
   elif ext == ".psi4":
-    srcfile = "/home/liuchw/.bashrc.poltype"
+    #srcfile = "/home/liuchw/.bashrc.poltype"
+    srcfile = "/home/liuchw/.bashrc.psi4"
     jobtype = "psi4"
     memmax = checkMem(node, "/home/liuchw/bin/Psi4Node")
     lines = open(inputFile).readlines()

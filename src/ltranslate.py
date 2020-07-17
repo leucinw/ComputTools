@@ -36,7 +36,7 @@ def main():
     return dist
   # calculate geometric center of a bunch of atoms
   def geomCenter(coords):
-    coord = np.array(coords)
+    coords = np.array(coords)
     geocent = [coords[:,0].mean(), \
                coords[:,1].mean(), \
                coords[:,2].mean()]

@@ -222,7 +222,7 @@ def main():
             fout.write("%3s   %12.6f%12.6f%12.6f\n"%(atoms[n],float(coords[0][n]),float(coords[1][n]),float(coords[2][n])))
         fout.write("units angstrom\nno_reorient\n")
         fout.write("symmetry c1\n}\n\n")
-        #fout.write("set {\nscf_type DF\n")
+        fout.write("set {\nscf_type DF\n")
         if qm == "MP2":
           fout.write("mp2_type DF\ne_convergence 7\nreference rhf\n}\n\n")
           if jt.upper() == "CBS" and bf.upper()=="AUG-CC-PVTZ":
