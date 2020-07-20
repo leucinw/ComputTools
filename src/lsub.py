@@ -88,14 +88,16 @@ def subOneJob(node, inputFile):
     cmdstr = 'ssh %s "source %s; cd %s; %s" &'%(node,srcfile,cwd,exestr)
   # psi4 
   elif ext == ".psi4":
-    #srcfile = "/home/liuchw/.bashrc.poltype"
-    srcfile = "/home/liuchw/.bashrc.psi4"
+    srcfile = "/home/liuchw/.bashrc.poltype"
+    #srcfile = "/home/liuchw/.bashrc.psi4"
     jobtype = "psi4"
     memmax = checkMem(node, "/home/liuchw/bin/Psi4Node")
     lines = open(inputFile).readlines()
     for line in lines:
-      if "MEM" in line.upper():
-        mem = int(line.split()[1])
+      if ("MEM" in line.upper()) and ("GB" in line.upper()):
+        mem = float(line.split("GB")[0].split()[1])
+      if ("MEM" in line.upper()) and ("MB" in line.upper()):
+        mem = float(line.split("MB")[0].split()[1])/1024.0
     if mem < memmax:
       exestr = "nohup psi4 -n 8 -i %s.psi4 -o %s.log >log.sub 2>err.sub &"%(f, f)
       cmdstr = 'ssh %s "source %s; cd %s; %s" &' % (node, srcfile, cwd, exestr)
