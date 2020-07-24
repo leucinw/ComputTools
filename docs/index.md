@@ -24,7 +24,6 @@
 
 ### Copyright 
   * You are welcomed to improve these tools and develop new ones.
-  * If you use some of them do your research, an explicit acknowledgement in your manuscript would be great! :)
 
 ### Author
   * [Chengwen Liu](http://leucinw.com)
