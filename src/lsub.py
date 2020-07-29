@@ -113,7 +113,7 @@ def subOneJob(node, inputFile):
     if gaus.upper == "G16":
       srcfile = "/home/liuchw/.bashrc.G16"
       exestr = "nohup g16 %s.com %s.log >log.sub 2>err.sub &"%(f, f)
-    if gaus.upper == "G09":
+    else:
       srcfile = "/home/liuchw/.bashrc.G09"
       exestr = "nohup g09 %s.com %s.log >log.sub 2>err.sub &"%(f, f)
     cmdstr = 'ssh %s "source %s; cd %s; %s" &' % (node, srcfile, cwd, exestr)
