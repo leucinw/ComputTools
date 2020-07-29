@@ -7,7 +7,6 @@
 
 
 import os,time,sys,subprocess
-from colorama import Fore
 from multiprocessing import Pool
 
 usage = ''' Currently supported syntax:
@@ -43,7 +42,7 @@ def checkOneNode(eachNode, GPU_Job):
     return eachNode, nCPUjobs
 
 def checkAllNodes(nodelistfile, GPU_Job):
-  print(Fore.RED + "Checking nodes ...")
+  print("Checking nodes ...")
   Nodes = []; nJobs = []; idleNodes = []
   for line in open(nodelistfile).readlines():
     if "#" not in line[:1]:
@@ -87,7 +86,7 @@ def subOneJob(node, inputFile):
     exestr = "nohup qchem -nt 8 %s.qchem %s.log >log.sub 2>err.sub &"%(f,f)
     cmdstr = 'ssh %s "source %s; cd %s; %s" &'%(node,srcfile,cwd,exestr)
   # psi4 
-  elif ext == ".psi4":
+  elif (ext == ".psi4"):
     srcfile = "/home/liuchw/.bashrc.poltype"
     #srcfile = "/home/liuchw/.bashrc.psi4"
     jobtype = "psi4"
@@ -105,10 +104,10 @@ def subOneJob(node, inputFile):
       cmdstr = "echo 'memory not big enough on %s !' "%node
   # gaussian
   elif ext == ".com":
-    srcfile = "/home/liuchw/.bashrc.G09"
-    exestr = "nohup g09 %s.com %s.log >log.sub 2>err.sub &"%(f, f)
-    #srcfile = "/home/liuchw/.bashrc.G16"
-    #exestr = "nohup g16 %s.com %s.log >log.sub 2>err.sub &"%(f, f)
+    #srcfile = "/home/liuchw/.bashrc.G09"
+    #exestr = "nohup g09 %s.com %s.log >log.sub 2>err.sub &"%(f, f)
+    srcfile = "/home/liuchw/.bashrc.G16"
+    exestr = "nohup g16 %s.com %s.log >log.sub 2>err.sub &"%(f, f)
     cmdstr = 'ssh %s "source %s; cd %s; %s" &' % (node, srcfile, cwd, exestr)
   # cuda 
   elif ext == ".cuda":
@@ -129,13 +128,12 @@ def subMultipleJobs(filelist, nodelistfile, GPU_Job):
   while(currentJob != len(files)):
     idleNodes = checkAllNodes(nodelistfile, GPU_Job)
     if (idleNodes == []):
-      #print(Fore.RED + "No idle nodes ! Wait for %s minute(s) !"%checkTime)
       time.sleep(60.0*checkTime)
     else:
       for eachNode in idleNodes:
         if (currentJob == len(files)):break
         subOneJob(eachNode,files[currentJob])
-        print(Fore.GREEN + "Submitted %s on %s!"%(files[currentJob], eachNode))
+        print("Submitted %s on %s!"%(files[currentJob], eachNode))
         currentJob += 1
       if (currentJob == len(files)):
         break
@@ -151,7 +149,7 @@ def main():
     _, ext = os.path.splitext(filelist[0])
     jobtype = ext[1:].upper()
   else:
-    print(Fore.RED + usage)
+    print(usage)
 
   if jobtype == "CUDA":
     GPU_Job = True
@@ -164,10 +162,10 @@ def main():
               "QCHEM": "/home/liuchw/bin/QChemNode", \
               "CUDA":  "/home/liuchw/bin/CudaNode"}
   if (jobtype not in supportedTypes):
-    print(Fore.RED + "%s files not supported!" %jobtype)
+    print("%s files not supported!" %jobtype)
     sys.exit(1)
   if (filelist == []):
-    print(Fore.RED + "you may have broken .log files?")
+    print("you may have broken .log files?")
   if (filelist != []) and (jobtype in supportedTypes):
     pairs = []
     for f in filelist:
