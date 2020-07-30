@@ -110,7 +110,7 @@ def subOneJob(node, inputFile):
       cmdstr = "echo 'memory not big enough on %s !' "%node
   # gaussian
   elif ext == ".com":
-    if gaus.upper == "G16":
+    if gaus.upper() == "G16":
       srcfile = "/home/liuchw/.bashrc.G16"
       exestr = "nohup g16 %s.com %s.log >log.sub 2>err.sub &"%(f, f)
     else:
