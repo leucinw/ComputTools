@@ -10,6 +10,7 @@
   * [x] firstMolecule.py: find the number of atoms in the first molecule of a molecular cluster
   * [x] geomFunction.py: some functions define the geometrical maths. distance, geometry center, etc 
   * [x] latomtyper.py: assign new atom types for the input xyz and prm (or key) files 
+  * [x] lboxbuilder.py: build a liquid box for tinker MD simulation
   * [x] lcalculator.py: a simple calculator for min, std, RMSE etc
   * [x] lconvert.py: convert a variety formats of chemical files from one to another
   * [x] ldensity.py: calculate instant density from tinker/tinker-openmm trajectory file(arc) 
