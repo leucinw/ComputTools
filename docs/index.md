@@ -24,8 +24,8 @@
   * [x] reformatISA.py: write the output of hi-part ISA multipoles to Tinker-readable format
   * [x] simBARsim.py: simplified BAR simulation program
 
-### Copyright 
-  * You are welcomed to improve these tools and develop new ones.
+### License 
+  * BSD 3-Clause License
 
 ### Author
   * [Chengwen Liu](http://leucinw.com)
