@@ -26,6 +26,8 @@ def main():
   density = float(args["density"])
 
   xyzedit = os.path.join(path, "xyzedit.x")
+  if not os.path.isfile(xyzedit):
+    xyzedit = os.path.join(path, "xyzedit")
    
   massdict = {"H": 1.007941, "C":12.01074, "N":14.006703, "O":15.999405, "S":32.0648, "P":30.973761998, \
               "F":18.998403163, "CL":35.4529, "BR":79.9035,"NA":22.98976928, "K":39.0983, "MG":24.3051, "ZN":65.38 }
