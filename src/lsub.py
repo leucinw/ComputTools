@@ -28,6 +28,7 @@ GPU_ExeList = ["dynamic_omm.x","bar_omm.x", "pmemd"]
 RED = '\33[91m'
 GREEN = '\33[92m'
 YELLOW = '\33[93m'
+ENDC = '\033[0m'
 BLANK50 = ' '*50
 
 def checkOneNode(eachNode, GPU_Job):
@@ -49,7 +50,7 @@ def checkOneNode(eachNode, GPU_Job):
     return eachNode, nCPUjobs
 
 def checkAllNodes(nodelistfile, GPU_Job):
-  print(RED + "%sKeeping detecting available nodes according to your node list---> "%BLANK50 + GREEN + nodelistfile)
+  print(RED + "%sKeeping detecting available nodes according to your node list---> "%(BLANK50 + GREEN + nodelistfile) + ENDC)
   Nodes = []; nJobs = []; idleNodes = []
   for line in open(nodelistfile).readlines():
     if "#" not in line[:1]:
@@ -141,7 +142,7 @@ def subMultipleJobs(filelist, nodelistfile, GPU_Job):
       for eachNode in idleNodes:
         if (currentJob == len(files)):break
         subOneJob(eachNode,files[currentJob])
-        print(GREEN + "%sSubmitted %s on %s!"%(BLANK50, files[currentJob], eachNode))
+        print(GREEN + "%sSubmitted %s on %s!"%(BLANK50, files[currentJob], eachNode) + ENDC)
         currentJob += 1
       if (currentJob == len(files)):
         break
@@ -158,15 +159,15 @@ def main():
   gaus = args["gaussian"]
   inps = args["input"]
   welcome = "Welcome to use lsub.py, an automated job submitting script for renlab clusters. Current file formats supported: COM, PSI4, QCHEM, CUDA -- C. Liu"
-  print("\n"+GREEN + BLANK50 + "="*145)
-  print(GREEN + BLANK50 + welcome)
-  print(GREEN + BLANK50 + "="*145+"\n")
+  print("\n"+GREEN + BLANK50 + "="*145 + ENDC)
+  print(GREEN + BLANK50 + welcome + ENDC)
+  print(GREEN + BLANK50 + "="*145+"\n" + ENDC)
   jobtype = ''
   if len(inps) > 1:
     _, ext = os.path.splitext(inps[0])
     jobtype = ext[1:].upper()
   else:
-    print(GREEN + BLANK50 + usage)
+    print(GREEN + BLANK50 + usage + ENDC)
 
   if jobtype == "CUDA":
     GPU_Job = True
@@ -179,10 +180,10 @@ def main():
               "QCHEM": "/home/liuchw/bin/QChemNode", \
               "CUDA":  "/home/liuchw/bin/CudaNode"}
   if (jobtype not in supportedTypes):
-    print(RED + "%s%s files not supported!" %(BLANK50,jobtype))
+    print(RED + "%s%s files not supported!" %(BLANK50,jobtype) + ENDC)
     sys.exit(1)
   if (inps == []):
-    print(YELLOW + "%sYou may have broken .log files?"%BLANK50)
+    print(YELLOW + "%sYou may have broken .log files?"%BLANK50 + ENDC)
   # submit the small files early
   if (inps != []) and (jobtype in supportedTypes):
     pairs = []

@@ -9,8 +9,13 @@
 import argparse
 import os,sys,time
 import subprocess
-from colorama import Fore
 import numpy
+
+# color
+RED = '\33[91m'
+GREEN = '\33[92m'
+YELLOW = '\33[93m'
+ENDC = '\033[0m'
 
 def main():
   #===>>>
@@ -324,7 +329,7 @@ def main():
   elif (to == "TXYZ"):
     ToTXYZ(fi, fo, at)
   else:
-    print(Fore.RED + "File format '%s' not supported!"%to)
+    print(RED + "File format '%s' not supported!"%to + ENDC)
   return
 
 if __name__ == "__main__":
