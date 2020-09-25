@@ -11,6 +11,13 @@
 import sys
 import numpy as np
 
+RED = '\33[91m'
+GREEN = '\33[92m'
+ENDC = '\033[0m'
+
+if len(sys.argv) != 4:
+  sys.exit("\n" + RED + "   Usage: python latomtyper.py xyz key index" + ENDC + "\n")
+
 xyz = sys.argv[1]
 key = sys.argv[2]
 idx = int(sys.argv[3])
@@ -38,13 +45,16 @@ def modKEY(key):
         formatted = "%4s    %5s%5s%5s   "%(s[0], str(int(s[1])+idxAdd), str(int(s[2])+idxAdd), s[3])
         newline = formatted + "   ".join(s[4:]) + "\n"
       elif "polarize " in line:
-        formatted = "%8s%5s%8.4f%8.4f   "%(s[0], str(int(s[1])+idxAdd), float(s[2]), float(s[3]))
-        # Mono-atomic ion
-        if len(s) == 4:
-          newline = formatted + "\n"
-        else:
+        if len(s) == 4: # AMOEBA without group definition, e.g, ion
+          formatted = "%8s%5s%8.4f%8.4f   "%(s[0], str(int(s[1])+idxAdd), float(s[2]), float(s[3]))
+          grps = ' ' 
+        elif len(s) == 5: # AMOEBA with group definition
+          formatted = "%8s%5s%8.4f%8.4f   "%(s[0], str(int(s[1])+idxAdd), float(s[2]), float(s[3]))
           grps = [str(int(grp)+idxAdd) for grp in s[4:]]
-          newline = formatted + "   ".join(grps) + "\n"
+        else: # AMOEBA+ with group definition
+          formatted = "%8s%5s%8.4f%8.4f%8.4f   "%(s[0], str(int(s[1])+idxAdd), float(s[2]), float(s[3]), float(s[4]))
+          grps = [str(int(grp)+idxAdd) for grp in s[5:]]
+        newline = formatted + "   ".join(grps) + "\n"
       elif "vdw " in line:
         # Hydrogens
         if len(s) == 5:
@@ -55,6 +65,9 @@ def modKEY(key):
       elif "bond " in line:
         formatted = "%4s    %5s%5s   "%(s[0], str(int(s[1])+idxAdd), str(int(s[2])+idxAdd))
         newline = formatted + "   ".join(s[3:]) + "\n"
+      elif "strbnd " in line:
+        formatted = "%5s    %5s%5s%5s   "%(s[0], str(int(s[1])+idxAdd), str(int(s[2])+idxAdd), str(int(s[3])+idxAdd))
+        newline = formatted + "   ".join(s[4:]) + "\n"
       elif "angle " in line:
         formatted = "%5s    %5s%5s%5s   "%(s[0], str(int(s[1])+idxAdd), str(int(s[2])+idxAdd), str(int(s[3])+idxAdd))
         newline = formatted + "   ".join(s[4:]) + "\n"
@@ -75,12 +88,14 @@ def modKEY(key):
             mpoleframes[i] = str(int(mpoleframes[i])+idxAdd) 
         if len(mpoleframes) == 4:# Z-Bisector or 3-Fold
           formatted = "%9s    %5s%5s%5s%5s   "%(s[0], mpoleframes[0], mpoleframes[1], mpoleframes[2], mpoleframes[3])
-        if len(mpoleframes) == 3:# Z-then-X or Bisector
+        elif len(mpoleframes) == 3:# Z-then-X or Bisector
           formatted = "%9s    %5s%5s%5s   "%(s[0], mpoleframes[0], mpoleframes[1], mpoleframes[2])
-        if len(mpoleframes) == 2:# Z-only
+        elif len(mpoleframes) == 2:# Z-only
           formatted = "%9s    %5s%5s   "%(s[0], mpoleframes[0], mpoleframes[1])
-        if len(mpoleframes) == 2:# Charge only 
+        elif len(mpoleframes) == 2:# Charge only 
           formatted = "%9s    %5s   "%(s[0], mpoleframes[0])
+        else:
+          print("multipole" + mpoleframes)
         newline = formatted + "         " + s[-1] + "\n"
       else:
         newline = line
