@@ -16,6 +16,7 @@
   * [x] lconvert.py: convert a variety formats of chemical files from one to another
   * [x] ldensity.py: calculate instant density from tinker/tinker-openmm trajectory file(arc) 
   * [x] ldimerinteract.py: generate structure of dimer cluster of interested interactions
+  * [x] lGaussianJobRepair.py: simple repair of common "Error terminated" Gaussian jobs 
   * [x] loptimization.py: an example for least square optimization problem
   * [x] lsub.py: automatically detect and submit QM jobs on clusters 
   * [x] ltranslate.py: translate the second molecule according to specified intermolecular distance 
