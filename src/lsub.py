@@ -10,6 +10,7 @@ import os,time,sys,subprocess
 from multiprocessing import Pool
 import argparse
 
+
 usage = ''' Currently supported syntax:
           1. python lsub.py -i water1.com   [water2.com]   [..] [-g g16]
           2. python lsub.py -i water1.qchem [water2.qchem] [..]
@@ -17,51 +18,48 @@ usage = ''' Currently supported syntax:
           4. python lsub.py -i *.com [-g g16]
           5. python lsub.py -i *.qchem
           6. python lsub.py -i *.psi4
-          7. python lsub.py -i dynamic_omm.cuda
   '''
 
 # global list 
 CPU_ExeList = ["psi4","g09","g16","dynamic.x","cp2k.ssmp","mpirun_qchem", "orca_mp2_mpi"]
-GPU_ExeList = ["dynamic_omm.x","bar_omm.x", "pmemd"]
 
 # color
 RED = '\33[91m'
 GREEN = '\33[92m'
 YELLOW = '\33[93m'
 ENDC = '\033[0m'
-BLANK50 = ' '*50
+BLANK20 = ' '*20
 
-def checkOneNode(eachNode, GPU_Job):
+
+if len(sys.argv) == 1:
+  sys.exit(RED + " please use '-h' option to see usage" + ENDC)
+
+
+def checkOneNode(eachNode):
   nCPUjobs = 0
-  nGPUjobs = 0
-  cmdstr = "ssh %s 'top -n1 -b'"%eachNode
   try:
+    cmdstr = "ssh %s 'top -n1 -b'"%eachNode
     topstr = subprocess.check_output(cmdstr, shell=True).decode("utf-8")
     linestr = ''.join(list(topstr))
-    for exe in GPU_ExeList:
-      nGPUjobs += linestr.count(exe)
     for exe in CPU_ExeList:
       nCPUjobs += linestr.count(exe)
   except:
     pass
-  if GPU_Job:
-    return eachNode, nGPUjobs
-  else:
-    return eachNode, nCPUjobs
+  return eachNode, nCPUjobs
 
-def checkAllNodes(nodelistfile, GPU_Job):
-  print(RED + "%sKeeping detecting available nodes according to your node list---> "%(BLANK50 + GREEN + nodelistfile) + ENDC)
+def checkAllNodes(nodelistfile):
+  print(RED + "%sKeeping detecting available nodes according to your node list--->"%BLANK20 + GREEN + nodelistfile + ENDC)
   Nodes = []; nJobs = []; idleNodes = []
   for line in open(nodelistfile).readlines():
     if "#" not in line[:1]:
       d = line.split()
-      Nodes.append([d[0], GPU_Job])
+      Nodes.append([d[0]])
       nJobs.append(int(d[1]))
   p = Pool(len(Nodes))
-  results = dict(p.starmap(checkOneNode,Nodes))
+  results = dict(p.starmap(checkOneNode, Nodes))
   p.close()
   p.join()
-  for [node,_], nJob in zip(Nodes, nJobs):
+  for [node], nJob in zip(Nodes, nJobs):
     num = nJob - results[node] 
     idleNodes += [node]*num
   return idleNodes
@@ -127,22 +125,19 @@ def subOneJob(node, inputFile):
   subprocess.run(cmdstr,shell=True)
   return
 
-def subMultipleJobs(filelist, nodelistfile, GPU_Job):
+def subMultipleJobs(filelist, nodelistfile):
   currentJob = 0
   checkTime = 0.5
-  if not GPU_Job: 
-    files = checkJobs(filelist)
-  else:
-    files = filelist
+  files = checkJobs(filelist)
   while(currentJob != len(files)):
-    idleNodes = checkAllNodes(nodelistfile, GPU_Job)
+    idleNodes = checkAllNodes(nodelistfile)
     if (idleNodes == []):
       time.sleep(60.0*checkTime)
     else:
       for eachNode in idleNodes:
         if (currentJob == len(files)):break
         subOneJob(eachNode,files[currentJob])
-        print(GREEN + "%sSubmitted %s on %s!"%(BLANK50, files[currentJob], eachNode) + ENDC)
+        print(GREEN + "%sSubmitted %s on %s!"%(BLANK20, files[currentJob], eachNode) + ENDC)
         currentJob += 1
       if (currentJob == len(files)):
         break
@@ -158,21 +153,16 @@ def main():
   global gaus 
   gaus = args["gaussian"]
   inps = args["input"]
-  welcome = "Welcome to use lsub.py, an automated job submitting script for renlab clusters. Current file formats supported: COM, PSI4, QCHEM, CUDA -- C. Liu"
-  print("\n"+GREEN + BLANK50 + "="*145 + ENDC)
-  print(GREEN + BLANK50 + welcome + ENDC)
-  print(GREEN + BLANK50 + "="*145+"\n" + ENDC)
-  jobtype = ''
-  if len(inps) > 1:
-    _, ext = os.path.splitext(inps[0])
-    jobtype = ext[1:].upper()
+  welcome = "Welcome to use lsub.py, an automated job submitting script for renlab clusters. Current file formats supported: COM, PSI4, QCHEM"
+  print("\n"+GREEN + BLANK20 + "="*145 + ENDC)
+  print(GREEN + BLANK20 + welcome + ENDC)
+  print(GREEN + BLANK20 + "="*145+"\n" + ENDC)
+  jobtype = None 
+  if len(inps) >= 1:
+    ext = inps[0].split(".")[-1]
+    jobtype = ext.upper()
   else:
-    print(GREEN + BLANK50 + usage + ENDC)
-
-  if jobtype == "CUDA":
-    GPU_Job = True
-  else:
-    GPU_Job = False
+    print(GREEN + BLANK20 + usage + ENDC)
 
   supportedTypes = ["COM", "PSI4",  "QCHEM", "CUDA"]
   nodeDict = {"COM"  : "/home/liuchw/bin/GaussianNode",\
@@ -180,10 +170,10 @@ def main():
               "QCHEM": "/home/liuchw/bin/QChemNode", \
               "CUDA":  "/home/liuchw/bin/CudaNode"}
   if (jobtype not in supportedTypes):
-    print(RED + "%s%s files not supported!" %(BLANK50,jobtype) + ENDC)
+    print(RED + "%s%s files not supported!" %(BLANK20,jobtype) + ENDC)
     sys.exit(1)
   if (inps == []):
-    print(YELLOW + "%sYou may have broken .log files?"%BLANK50 + ENDC)
+    print(YELLOW + "%sYou may have broken .log files?"%BLANK20 + ENDC)
   # submit the small files early
   if (inps != []) and (jobtype in supportedTypes):
     pairs = []
@@ -194,7 +184,7 @@ def main():
     sortedinps=[]
     for pair in pairs:
       sortedinps.append(pair[1])
-    subMultipleJobs(sortedinps, nodeDict[jobtype], GPU_Job)
+    subMultipleJobs(sortedinps, nodeDict[jobtype])
   return 
 
 if __name__ == '__main__':
