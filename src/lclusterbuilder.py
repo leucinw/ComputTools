@@ -33,6 +33,8 @@ def main():
   parser.add_argument('-f', dest = 'filename', required=True)  
   parser.add_argument('-spn', dest = 'spin', default = 1)  
   parser.add_argument('-chg', dest = 'charge', default = 0)  
+  parser.add_argument('-method', dest = 'method', default = "PBE1PBE")  
+  parser.add_argument('-grid', dest = 'gridsize', default = 3.0)  
   args = vars(parser.parse_args())
 
   molecules = args["molecules"]
@@ -40,7 +42,9 @@ def main():
   ncluster = int(args["ncluster"])
   fname = args["filename"]
   spin = args["spin"]
+  method = args["method"]
   charge = args["charge"]
+  gridsize = float(args["gridsize"])
 
   # read atoms and coordinate from xyz file
   def readXYZ(xyz):
@@ -76,7 +80,8 @@ def main():
     with open(fname,"w") as f:
       nproc = "%Nproc=8\n" 
       memory = "%Mem=10GB\n"
-      keywords = "#p PBE1PBE/6-31G* Opt(maxcycle=400, Loose) IOP(5/13=1)\n"
+      keywords = "#p %s/6-31G* Opt(maxcycle=400, Loose) IOP(5/13=1)\n"%method
+      #keywords = "#p %s Opt\n"%method
       comment = "Opt job \n"
       chgspin = "  ".join([str(charge), str(spin)]) + "\n"
       f.write(memory + nproc + keywords + "\n" + comment + "\n" + chgspin)
@@ -108,9 +113,9 @@ def main():
 
   # put molecules together
   clusterGrid = { 1: [ [0.0, 0.0, 0.0],], 
-                  2: [ [0.0, 0.0, 0.0], [3.0, 0.0, 0.0], ], 
-                  3: [ [0.0, 0.0, 0.0], [3.0, 0.0, 0.0], [3.0/2.0, 3.0*1.732/2.0, 0.0],], 
-                  4: [ [0.0, 0.0, 0.0], [3.0, 0.0, 0.0], [3.0, 3.0, 0.0], [0.0, 3.0, 0.0], ],
+                  2: [ [0.0, 0.0, 0.0], [gridsize, 0.0, 0.0], ], 
+                  3: [ [0.0, 0.0, 0.0], [gridsize, 0.0, 0.0], [gridsize/2.0, gridsize*1.732/2.0, 0.0],], 
+                  4: [ [0.0, 0.0, 0.0], [gridsize, 0.0, 0.0], [gridsize, gridsize, 0.0], [0.0, gridsize, 0.0], ],
                 }
  
   if nmol > 4:
@@ -126,6 +131,15 @@ def main():
     allcoords += list(translate(coords, grid[i]))  
     natoms.append(len(atoms)) 
   writeXYZ(allatoms, allcoords, "init.xyz")
+
+  # filename
+  currindex = 0
+  files = os.listdir(os.getcwd())
+  for f in files:
+    if f.endswith(".com") and (fname in f):
+      index = int(f.split(".com")[0].split("_")[-1])
+      if index > currindex:
+        currindex = index
 
   # do random rotation
   allatoms, allcoords = readXYZ("init.xyz")
@@ -150,8 +164,7 @@ def main():
       for coord in rotmolcoords: 
         newcoord = np.dot(rotmat, coord) 
         finalcoords.append(newcoord)
-    #writeXYZ(allatoms, finalcoords, fname + "_%03d"%(j+1) + ".xyz")
-    writeCOM(allatoms, finalcoords, fname + "_%03d"%(j+1) + ".com")
+    writeCOM(allatoms, finalcoords, fname + "_%03d"%(j+1+currindex) + ".com")
   return
 
 if __name__ == "__main__":

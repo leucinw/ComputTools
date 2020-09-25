@@ -18,13 +18,16 @@ YELLOW = '\33[93m'
 ENDC = '\033[0m'
 
 def main():
+  if len(sys.argv) == 1:
+    sys.exit(RED + " please use '-h' option to see usage" + ENDC)
+
   #===>>>
   parser = argparse.ArgumentParser()
   parser.add_argument('-i',     dest = 'input', required=True)  
   parser.add_argument('-o',     dest = 'output', required=True)
   parser.add_argument('-it',    dest = 'inType', required=True, choices=["xyz", "txyz", "g09", "qcout", "mol", "mol2", "sdf"])
   parser.add_argument('-ot',    dest = 'outType', required=True, choices = ["xyz", "qcin", "psi4", "com", "txyz"])
-  parser.add_argument('-q',     dest = 'QM', choices = ["HF", "MP2", "B3LYP", "wB97XD", "CCSD_T", "PBE0"], default="HF")
+  parser.add_argument('-q',     dest = 'QM', choices = ["HF", "MP2", "B3LYP", "wB97XD", "BLYP-D3BJ", "wB97X-D3BJ", "CCSD_T", "PBE0", "MP2D", "PBE1PBE"], default="HF")
   parser.add_argument('-b',     dest = 'basis',  default = "STO-3G")
   parser.add_argument('-c',     dest = 'charge', default = "0")
   parser.add_argument('-c1',    dest = 'charge1', default = None)
@@ -245,7 +248,24 @@ def main():
               fout.write("energy('mp2/%s')\n"%bf)
             else:
               fout.write("energy('mp2/%s', bsse_type='%s')\n"%(bf,bsse))
-        if qm == "CCSD(T)":
+        elif qm == "MP2D":
+          fout.write("mp2_type DF\ne_convergence 7\nreference rhf\n}\n\n")
+          if jt.upper() == "CBS" and bf.upper()=="AUG-CC-PVTZ":
+            if not bsse:
+              fout.write("energy('mp2d/aug-cc-pv[tq]z')\n")
+            else:
+              fout.write("energy('mp2d/aug-cc-pv[tq]z', bsse_type='%s')\n"%bsse)
+          if jt.upper() == "CBS" and bf.upper()=="CC-PVTZ":
+            if not bsse:
+              fout.write("energy('mp2d/cc-pv[tq]z')\n")
+            else:
+              fout.write("energy('mp2d/cc-pv[tq]z', bsse_type='%s')\n"%bsse)
+          if jt.upper() == "SP":
+            if not bsse:
+              fout.write("energy('mp2d/%s')\n"%bf)
+            else:
+              fout.write("energy('mp2d/%s', bsse_type='%s')\n"%(bf,bsse))
+        elif qm == "CCSD(T)":
           fout.write("mp2_type DF\ne_convergence 7\nreference rhf\n}\n\n")
           if jt.upper() == "CBS":
             if not bsse:
@@ -257,6 +277,14 @@ def main():
               fout.write("energy('ccsd(t)/%s')\n"%bf)
             else:
               fout.write("energy('ccsd(t)/%s', bsse_type='%s')\n"%(bf, bsse))
+        else: 
+          fout.write("e_convergence 7\nreference rhf\n}\n\n")
+          if jt.upper() == "SP":
+            if not bsse:
+              fout.write("energy('%s/%s')\n"%(qm,bf))
+            else:
+              fout.write("energy('%s/%s', bsse_type='%s')\n"%(qm,bf, bsse))
+
         if jt.upper() == "SAPT":
           fout.write("basis %s\n"%bf)
           fout.write("freeze_core True\n")
