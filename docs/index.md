@@ -18,6 +18,7 @@
   * [x] ldimerinteract.py: generate structure of dimer cluster of interested interactions
   * [x] lGaussianJobRepair.py: simple repair of common "Error terminated" Gaussian jobs 
   * [x] loptimization.py: an example for least square optimization problem
+  * [x] lProbeIon.py: generate com and xyz structures with probing ion 
   * [x] lsub.py: automatically detect and submit QM jobs on clusters 
   * [x] ltranslate.py: translate the second molecule according to specified intermolecular distance 
   * [x] matchPRM.py: mapping the amoeba parameters to new atom types 
