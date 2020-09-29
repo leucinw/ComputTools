@@ -56,27 +56,43 @@ def main():
         lines = open(obj.com).readlines()
         with open(obj.com + "_1", "w") as fcom:
           for i in range(0, len(lines)-len(xs)-1):
+            if ("#" in lines[i]) and ("OPT" in lines[i].upper()):
+              lines[i] = lines[i].upper().replace("OPT(", "OPT(ReadFC,").lower()
             fcom.write(lines[i])
           for i in range(0, len(xs)):
             fcom.write("%3s%12.6f%12.6f%12.6f\n"%(atoms[i], xs[i], ys[i],zs[i]))
           fcom.write("\n")
         os.rename(obj.com+"_1", obj.com)
         os.remove(obj.log)
-        print(GREEN + "repaired %s with Error L9999 case"%f)
+        print(GREEN + "repaired %s with Error L9999 case"%f + ENDC)
       elif err == "l103": 
         [atoms, xs, ys, zs] = obj.getCoords()
         lines = open(obj.com).readlines()
         with open(obj.com + "_1", "w") as fcom:
           for i in range(0, len(lines)-len(xs)-1):
             if ("#" in lines[i]) and ("OPT" in lines[i].upper()):
-              lines[i] = lines[i].upper().replace("OPT", "OPT=Catesian").lower()
+              lines[i] = lines[i].upper().replace("OPT(", "OPT(Cartesian,").lower()
             fcom.write(lines[i])
           for i in range(0, len(xs)):
             fcom.write("%3s%12.6f%12.6f%12.6f\n"%(atoms[i], xs[i], ys[i],zs[i]))
           fcom.write("\n")
         os.rename(obj.com+"_1", obj.com)
         os.remove(obj.log)
-        print(GREEN + "repaired %s with Error L103 case"%f)
+        print(GREEN + "repaired %s with Error L103 case"%f + ENDC)
+      elif err == "l202": 
+        [atoms, xs, ys, zs] = obj.getCoords()
+        lines = open(obj.com).readlines()
+        with open(obj.com + "_1", "w") as fcom:
+          for i in range(0, len(lines)-len(xs)-1):
+            if ("#" in lines[i]) and ("Symmetry=None" not in lines[i]): 
+              lines[i] = lines[i][:-1] + " Symmetry=None \n"
+            fcom.write(lines[i])
+          for i in range(0, len(xs)):
+            fcom.write("%3s%12.6f%12.6f%12.6f\n"%(atoms[i], xs[i], ys[i],zs[i]))
+          fcom.write("\n")
+        os.rename(obj.com+"_1", obj.com)
+        os.remove(obj.log)
+        print(GREEN + "repaired %s with Error L202 case"%f + ENDC)
       elif err == None:
         pass
       else:
