@@ -154,9 +154,9 @@ def main():
   gaus = args["gaussian"]
   inps = args["input"]
   welcome = "Welcome to use lsub.py, an automated job submitting script for renlab clusters. Current file formats supported: COM, PSI4, QCHEM"
-  print("\n"+GREEN + BLANK20 + "="*145 + ENDC)
+  print("\n"+GREEN + BLANK20 + "="*130 + ENDC)
   print(GREEN + BLANK20 + welcome + ENDC)
-  print(GREEN + BLANK20 + "="*145+"\n" + ENDC)
+  print(GREEN + BLANK20 + "="*130+"\n" + ENDC)
   jobtype = None 
   if len(inps) >= 1:
     ext = inps[0].split(".")[-1]
