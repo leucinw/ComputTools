@@ -15,6 +15,8 @@ def main():
   parser.add_argument('-f1', dest = 'datafile1', required=True)  
   parser.add_argument('-f2', dest = 'datafile2', default=None)  
   parser.add_argument('-c1', dest = 'ncolumn1', required=True)  
+  parser.add_argument('-s1', dest = 'skiprow1', default=0, type=int)  
+  parser.add_argument('-s2', dest = 'skiprow2', default=0, type=int)  
   parser.add_argument('-c2', dest = 'ncolumn2')  
   parser.add_argument('-o',  dest = 'operator', required=True, choices=['MIN', 'MAX', 'MEDIAN', 'MEAN', 'STD', 'RMSE', 'MUE', 'MSE'])
   args = vars(parser.parse_args())
@@ -25,6 +27,8 @@ def main():
   c1 = int(args["ncolumn1"])
   c2 = int(args["ncolumn2"])
   op = args["operator"]
+  s1 = args["skiprow1"]
+  s2 = args["skiprow1"]
   
   # minimal
   def fmin(arr):
@@ -62,9 +66,9 @@ def main():
     print("Mean Unsigned Error: %12.6f"%(mue))
     return 
   
-  arr1 = np.loadtxt(f1, usecols=(c1,), dtype="float", skiprows=0)
+  arr1 = np.loadtxt(f1, usecols=(c1,), dtype="float", skiprows=s1)
   if f2:
-    arr2 = np.loadtxt(f2, usecols=(c2,), dtype="float", skiprows=0)
+    arr2 = np.loadtxt(f2, usecols=(c2,), dtype="float", skiprows=s2)
 
   if (op == "MIN"):
     fmin(arr1)
