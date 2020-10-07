@@ -20,6 +20,7 @@
   * [x] loptimization.py: an example for least square optimization problem
   * [x] lProbingESP.py: generate com and xyz structures with probing ion/charge 
   * [x] lsub.py: automatically detect and submit QM jobs on clusters 
+  * [x] ltorsion.py: fit/refine torsion parameters for AMOEBA/AMOEBA+ FFs
   * [x] ltranslate.py: translate the second molecule according to specified intermolecular distance 
   * [x] matchPRM.py: mapping the amoeba parameters to new atom types 
   * [x] matchTXYZ.py: mapping one tinker xyz file to another 
