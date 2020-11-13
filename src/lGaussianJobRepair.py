@@ -57,7 +57,7 @@ def main():
         with open(obj.com + "_1", "w") as fcom:
           for i in range(0, len(lines)-len(xs)-1):
             if ("#" in lines[i]) and ("OPT" in lines[i].upper()):
-              lines[i] = lines[i].upper().replace("OPT(", "OPT(ReadFC,").lower()
+              lines[i] = lines[i].upper().replace("OPT(", "OPT(CalcFC,").lower()
             fcom.write(lines[i])
           for i in range(0, len(xs)):
             fcom.write("%3s%12.6f%12.6f%12.6f\n"%(atoms[i], xs[i], ys[i],zs[i]))

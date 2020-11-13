@@ -27,7 +27,7 @@ def main():
   parser = argparse.ArgumentParser()
   parser.add_argument('-i',     dest = 'input', required=True)  
   parser.add_argument('-o',     dest = 'output', required=True)
-  parser.add_argument('-it',    dest = 'inType', required=True, choices=["xyz", "txyz", "g09", "qcout", "mol", "mol2", "sdf"])
+  parser.add_argument('-it',    dest = 'inType', required=True, choices=["xyz", "txyz", "g09", "qcout", "mol", "mol2", "sdf", "psiout"])
   parser.add_argument('-ot',    dest = 'outType', required=True, choices = ["xyz", "qcin", "psi4", "com", "txyz"])
   parser.add_argument('-q',     dest = 'QM', choices = ["HF", "MP2", "B3LYP", "WB97XD", "BLYP-D3BJ", "WB97X-D3BJ", "CCSD_T", "PBE0", "MP2D", "PBE1PBE"], default="HF", type=str.upper)
   parser.add_argument('-b',     dest = 'basis',  default = "STO-3G")
@@ -46,11 +46,24 @@ def main():
   parser.add_argument('-at',    dest = 'atomtype', nargs='+', default = None)
   args = vars(parser.parse_args())
 
+
   def ToXYZ(fi,fo):
     if ti == "XYZ":
       cmdstr = "babel -ixyz %s -oxyz %s"%(fi, fo)
     elif ti == "TXYZ":
-      cmdstr = "babel -itxyz %s -oxyz %s"%(fi, fo)
+      lines = open(fi).readlines()
+      n = len(lines[0].split())
+      if n == 1:
+        with open("tmp.t","w") as ftxyz:
+          ftxyz.write(lines[0][:-1] + " Comments \n")
+          for line in lines[1:]:
+            ftxyz.write(line)
+        cmdstr = "babel -itxyz %s -oxyz %s"%("tmp.t", fo)
+      else:
+        cmdstr = "babel -itxyz %s -oxyz %s"%(fi, fo)
+    elif ti == "PSIOUT":
+      psiout2xyz(fi,fo)
+      cmdstr = "echo 'write xyz file from psi4 log!'"
     elif ti == "G09":
       cmdstr = "babel -ig09 %s -oxyz %s"%(fi, fo)
     elif ti == "QCOUT":
@@ -69,6 +82,9 @@ def main():
   def ToTXYZ(fi,fo,at):
     if ti == "XYZ":
       cmdstr = "babel -ixyz %s -otxyz %s"%(fi, "tmp.txyz")
+    elif ti == "PSIOUT":
+      psiout2xyz(fi, "tmp.x")
+      cmdstr = "babel -ixyz %s -otxyz %s"%("tmp.x", "tmp.txyz")
     elif ti == "TXYZ":
       cmdstr = "babel -itxyz %s -otxyz %s"%(fi, "tmp.txyz")
     elif ti == "G09":
@@ -106,6 +122,9 @@ def main():
   def ToCOM(fi,fo):
     if ti == "XYZ":
       cmdstr = "babel -ixyz %s -ogau %s"%(fi, fo)
+    elif ti == "PSIOUT":
+      psiout2xyz(fi, 'tmp.x')
+      cmdstr = "babel -ixyz %s -ogau %s"%("tmp.x", fo)
     elif ti == "TXYZ":
       cmdstr = "babel -itxyz %s -ogau %s"%(fi, fo)
     elif ti == "COM":
@@ -130,7 +149,7 @@ def main():
     mem   = "%Mem="+me +"\n"
     
     if (jt.upper() == "OPT"):
-      extra = "IOP(5/13=1)\n"
+      extra = "(calcFC, maxcyc=200) IOP(5/13=1)\n"
     elif (jt.upper() == "OPT+FREQ"):
       extra = "IOP(5/13=1)\n"
     else:
@@ -169,6 +188,9 @@ def main():
   def ToQCHEM(fi,fo):
     if ti == "XYZ":
       cmdstr = "babel -ixyz %s -oqcin %s"%(fi, fo)
+    if ti == "PSIOUT":
+      psiout2xyz(fi, "tmp.x")
+      cmdstr = "babel -ixyz %s -oqcin %s"%("tmp.x", fo)
     elif ti == "TXYZ":
       cmdstr = "babel -itxyz %s -oqcin %s"%(fi, fo)
     elif ti == "COM":
@@ -291,6 +313,9 @@ def main():
     subprocess.run(rmstr, shell=True)
     if ti == "XYZ":
       cmdstr = "cp %s tmp.xyz"%fi
+    elif ti == "PSIOUT":
+      psiout2xyz(fi, "tmp.xyz")
+      cmdstr = "echo 'write xyz file from psi4 log!'"
     elif ti == "TXYZ":
       cmdstr = "babel -itxyz %s -oxyz %s"%(fi, "tmp.xyz")
     elif ti == "COM":
@@ -312,7 +337,24 @@ def main():
     if os.path.isfile("tmp.xyz"):
       XYZ2PSI4("tmp.xyz", fo)
     return
-
+    
+  def psiout2xyz(fin, fout):
+    lines = open(fin).readlines()
+    for n in range(len(lines)):
+      if "Final optimized geometry " in lines[n]:break
+    atoms = []
+    coords = []
+    for n in range(n+6, len(lines)):
+      if lines[n] == "\n":break
+      dd = lines[n].split()
+      atoms.append(dd[0])
+      coords.append(dd[1:4])
+    with open(fout, "w") as fxyz:
+      fxyz.write("%3s\nconverted from %s\n"%(len(atoms), fin))
+      for n in range(len(atoms)):
+        fxyz.write("%3s%12.6f%12.6f%12.6f\n"%(atoms[n], float(coords[n][0]), float(coords[n][1]), float(coords[n][2])))
+    return
+          
   fi = args["input"]
   fo = args["output"]
   ti = args["inType"].upper()

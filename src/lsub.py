@@ -9,19 +9,16 @@
 import os,time,sys,subprocess
 from multiprocessing import Pool
 import argparse
+import numpy as np
 
 
 usage = ''' Currently supported syntax:
-          1. python lsub.py -i water1.com   [water2.com]   [..] [-g g16]
-          2. python lsub.py -i water1.qchem [water2.qchem] [..]
-          3. python lsub.py -i water1.psi4  [water2.psi4]  [..]
-          4. python lsub.py -i *.com [-g g16]
-          5. python lsub.py -i *.qchem
-          6. python lsub.py -i *.psi4
-  '''
+            1. python lsub.py -i *.com [-g g16]
+            2. python lsub.py -i *.qchem
+            3. python lsub.py -i *.psi4 '''
 
 # global list 
-CPU_ExeList = ["psi4","g09","g16","dynamic.x","cp2k.ssmp","mpirun_qchem", "orca_mp2_mpi"]
+CPU_ExeList = ["psi4","g09","g16","dynamic.x","dynamic", "cp2k.ssmp","mpirun_qchem", "orca_mp2_mpi", "gmx_mpi", "gmx", "analyze", "optimize"]
 
 # color
 RED = '\33[91m'
@@ -29,10 +26,6 @@ GREEN = '\33[92m'
 YELLOW = '\33[93m'
 ENDC = '\033[0m'
 BLANK20 = ' '*20
-
-
-if len(sys.argv) == 1:
-  sys.exit(RED + " please use '-h' option to see usage" + ENDC)
 
 
 def checkOneNode(eachNode):
@@ -48,13 +41,15 @@ def checkOneNode(eachNode):
   return eachNode, nCPUjobs
 
 def checkAllNodes(nodelistfile):
-  print(RED + "%sKeeping detecting available nodes according to your node list--->"%BLANK20 + GREEN + nodelistfile + ENDC)
+  print(RED + BLANK20 + "Keeping detecting nodes according to -->%s\n"%nodelistfile + ENDC, end = "\r")
   Nodes = []; nJobs = []; idleNodes = []
   for line in open(nodelistfile).readlines():
     if "#" not in line[:1]:
       d = line.split()
-      Nodes.append([d[0]])
-      nJobs.append(int(d[1]))
+      n = d[0]
+      if n not in nodesExcluded:
+        Nodes.append([n])
+        nJobs.append(int(d[1]))
   p = Pool(len(Nodes))
   results = dict(p.starmap(checkOneNode, Nodes))
   p.close()
@@ -95,7 +90,7 @@ def subOneJob(node, inputFile):
   elif (ext == ".psi4"):
     srcfile = "/home/liuchw/.bashrc.psi4"
     jobtype = "psi4"
-    memmax = checkMem(node, "/home/liuchw/bin/Psi4Node")
+    memmax = checkMem(node, "/home/liuchw/Docs/Psi4Node")
     lines = open(inputFile).readlines()
     for line in lines:
       if ("MEM" in line.upper()) and ("GB" in line.upper()):
@@ -127,12 +122,12 @@ def subOneJob(node, inputFile):
 
 def subMultipleJobs(filelist, nodelistfile):
   currentJob = 0
-  checkTime = 0.5
+  checkTime = 3.0 
   files = checkJobs(filelist)
   while(currentJob != len(files)):
     idleNodes = checkAllNodes(nodelistfile)
     if (idleNodes == []):
-      time.sleep(60.0*checkTime)
+      time.sleep(10.0*checkTime)
     else:
       for eachNode in idleNodes:
         if (currentJob == len(files)):break
@@ -142,21 +137,36 @@ def subMultipleJobs(filelist, nodelistfile):
       if (currentJob == len(files)):
         break
       else:
-        time.sleep(60.0*checkTime)
+        time.sleep(10.0*checkTime)
   return 
 
 def main():
+
+  if len(sys.argv) == 1:
+    sys.exit(RED + " please use '-h' option to see usage" + ENDC)
+
   parser = argparse.ArgumentParser()
-  parser.add_argument('-i', dest = 'input', nargs='+', required=True)  
-  parser.add_argument('-g', dest = 'gaussian', default="g09")  
+  parser.add_argument('-i', dest = 'input', nargs='+', required=True, help="Input files, with extension of .com, .psi4, or .qchem")  
+  parser.add_argument('-g', dest = 'gauver', default="g09", help="Gaussian version: either g09 or g16. default: g09")  
+  parser.add_argument('-e', dest = 'exnode', default=None, help="Nodelist to be excluded, default: None")  
   args = vars(parser.parse_args())
-  global gaus 
-  gaus = args["gaussian"]
+  global gaus, nodesExcluded 
   inps = args["input"]
+  gaus = args["gauver"]
+  exclude = args["exnode"]
+
+
   welcome = "Welcome to use lsub.py, an automated job submitting script for renlab clusters. Current file formats supported: COM, PSI4, QCHEM"
   print("\n"+GREEN + BLANK20 + "="*130 + ENDC)
   print(GREEN + BLANK20 + welcome + ENDC)
   print(GREEN + BLANK20 + "="*130+"\n" + ENDC)
+
+  if exclude != None:
+    nodesExcluded = np.loadtxt(exclude, usecols=(-1,), dtype="str", unpack=True)
+    print(YELLOW + BLANK20 + "These nodes will be ignored: " + " ".join(nodesExcluded) + ENDC)
+  else:
+    nodesExcluded = []
+
   jobtype = None 
   if len(inps) >= 1:
     ext = inps[0].split(".")[-1]
@@ -164,17 +174,14 @@ def main():
   else:
     print(GREEN + BLANK20 + usage + ENDC)
 
-  supportedTypes = ["COM", "PSI4",  "QCHEM", "CUDA"]
-  nodeDict = {"COM"  : "/home/liuchw/bin/GaussianNode",\
-              "PSI4" : "/home/liuchw/bin/Psi4Node", \
-              "QCHEM": "/home/liuchw/bin/QChemNode", \
-              "CUDA":  "/home/liuchw/bin/CudaNode"}
+  supportedTypes = ["COM", "PSI4",  "QCHEM"]
+  nodeDict = {"COM"  : "/home/liuchw/Docs/GaussianNode",\
+              "PSI4" : "/home/liuchw/Docs/Psi4Node", \
+              "QCHEM": "/home/liuchw/Docs/QChemNode", }
   if (jobtype not in supportedTypes):
     print(RED + "%s%s files not supported!" %(BLANK20,jobtype) + ENDC)
     sys.exit(1)
-  if (inps == []):
-    print(YELLOW + "%sYou may have broken .log files?"%BLANK20 + ENDC)
-  # submit the small files early
+
   if (inps != []) and (jobtype in supportedTypes):
     pairs = []
     for f in inps:
