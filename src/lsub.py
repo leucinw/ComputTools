@@ -5,194 +5,116 @@
 #   University of Texas at Austin  #
 #===================================
 
-
 import os,time,sys,subprocess
-from multiprocessing import Pool
 import argparse
 import numpy as np
+import concurrent.futures 
 
-
-usage = ''' Currently supported syntax:
-            1. python lsub.py -i *.com [-g g16]
-            2. python lsub.py -i *.qchem
-            3. python lsub.py -i *.psi4 '''
-
-# global list 
-CPU_ExeList = ["psi4","g09","g16","dynamic.x","dynamic", "cp2k.ssmp","mpirun_qchem", "orca_mp2_mpi", "gmx_mpi", "gmx", "analyze", "optimize"]
-
-# color
-RED = '\33[91m'
-GREEN = '\33[92m'
-YELLOW = '\33[93m'
-ENDC = '\033[0m'
-BLANK20 = ' '*20
-
-
-def checkOneNode(eachNode):
-  nCPUjobs = 0
+# nodes to check
+def checkone(node):
+  njobs = 0
+  exelist = ["psi4","g09","g16","dynamic.x","dynamic", "cp2k.ssmp","mpirun_qchem","orca_mp2_mpi","gmx_mpi","gmx"]
   try:
-    cmdstr = "ssh %s 'top -n1 -b'"%eachNode
-    topstr = subprocess.check_output(cmdstr, shell=True).decode("utf-8")
-    linestr = ''.join(list(topstr))
-    for exe in CPU_ExeList:
-      nCPUjobs += linestr.count(exe)
+    topstr = subprocess.check_output(f"ssh {node} 'top -n1 -b'", shell=True).decode("utf-8")
+    line = ''.join(list(topstr))
+    for exe in exelist:
+      njobs += linestr.count(exe)
   except:
     pass
-  return eachNode, nCPUjobs
+  return node,njobs
 
-def checkAllNodes(nodelistfile):
-  print(RED + BLANK20 + "Keeping detecting nodes according to -->%s\n"%nodelistfile + ENDC, end = "\r")
-  Nodes = []; nJobs = []; idleNodes = []
-  for line in open(nodelistfile).readlines():
-    if "#" not in line[:1]:
-      d = line.split()
-      n = d[0]
-      if n not in nodesExcluded:
-        Nodes.append([n])
-        nJobs.append(int(d[1]))
-  p = Pool(len(Nodes))
-  results = dict(p.starmap(checkOneNode, Nodes))
-  p.close()
-  p.join()
-  for [node], nJob in zip(Nodes, nJobs):
-    num = nJob - results[node] 
-    idleNodes += [node]*num
-  return idleNodes
+def checkNodes(nodes):
+  nodejobs = []
+  print('\033[91m' + "Checking availability of RENLAB clusters..." + '\033[0m')
+  with concurrent.futures.ProcessPoolExecutor() as executor:
+    results = [executor.submit(checkone, node) for node in nodes]
+    for f in concurrent.futures.as_completed(results):
+      nodejobs.append(f.result())
+  return nodejobs 
 
-def checkMem(node, nodelistfile):
-  for line in open(nodelistfile).readlines():
-    if ("#" not in line) and (line !="\n"):
-      if node in line:
-        mem = int(line.split()[2])
-  return mem
-
-
-def checkJobs(filelist):
-  fileToSubmit = []
-  fileformats = [".qchem", ".psi4", ".com"]
-  for files in filelist:
-    _, ext = os.path.splitext(files)
-    if ext in fileformats: 
-      fname, end = os.path.splitext(files)
-      if not os.path.isfile(fname + ".log"):
-        fileToSubmit.append(files)
-  return fileToSubmit 
-
-def subOneJob(node, inputFile):
-  f, ext = os.path.splitext(inputFile)
+# submit job one by one 
+def subOneJob(node,qmfile):
+  f, ext = os.path.splitext(qmfile)
   cwd = os.getcwd()
-  # qchem 
-  if ext == ".qchem":
-    srcfile = "/home/liuchw/.bashrc.qchem"
-    exestr = "nohup qchem -nt 8 %s.qchem %s.log >log.sub 2>err.sub &"%(f,f)
-    cmdstr = 'ssh %s "source %s; cd %s; %s" &'%(node,srcfile,cwd,exestr)
-  # psi4 
-  elif (ext == ".psi4"):
-    srcfile = "/home/liuchw/.bashrc.psi4"
-    jobtype = "psi4"
-    memmax = checkMem(node, "/home/liuchw/Docs/Psi4Node")
-    lines = open(inputFile).readlines()
-    for line in lines:
-      if ("MEM" in line.upper()) and ("GB" in line.upper()):
-        mem = float(line.split("GB")[0].split()[1])
-      if ("MEM" in line.upper()) and ("MB" in line.upper()):
-        mem = float(line.split("MB")[0].split()[1])/1024.0
-    if mem < memmax:
-      exestr = "nohup psi4 -n 8 -i %s.psi4 -o %s.log >log.sub 2>err.sub &"%(f, f)
-      cmdstr = 'ssh %s "source %s; cd %s; %s" &' % (node, srcfile, cwd, exestr)
-    else:
-      cmdstr = "echo 'memory not big enough on %s !' "%node
-  # gaussian
-  elif ext == ".com":
-    if gaus.upper() == "G16":
-      srcfile = "/home/liuchw/.bashrc.G16"
-      exestr = "nohup g16 %s.com %s.log >log.sub 2>err.sub &"%(f, f)
-    else:
-      srcfile = "/home/liuchw/.bashrc.G09"
-      exestr = "nohup g09 %s.com %s.log >log.sub 2>err.sub &"%(f, f)
+  ext = ext.upper()
+  if ext == ".COM":
+    srcfile = "/home/liuchw/.bashrc.G09"
+    exestr = "nohup g09 %s.com %s.log >log.sub 2>err.sub &"%(f, f)
     cmdstr = 'ssh %s "source %s; cd %s; %s" &' % (node, srcfile, cwd, exestr)
-  # cuda 
-  elif ext == ".cuda":
-    exestr = "nohup sh %s >log.sub 2>err.sub &"%inputFile
-    cmdstr = 'ssh %s "cd %s; %s" &' % (node, cwd, exestr)
+  elif ext == ".PSI4":
+    srcfile = "/home/liuchw/.bashrc.psi4"
+    exestr = "nohup psi4 -n 8 -i %s.psi4 -o %s.log >log.sub 2>err.sub &"%(f, f)
+    cmdstr = 'ssh %s "source %s; cd %s; %s" &' % (node, srcfile, cwd, exestr)
   else:
-    cmdstr = "echo 'file format not supported!'"
+    cmdstr = "echo 'file format %s not supported!'"%ext
   subprocess.run(cmdstr,shell=True)
   return
 
-def subMultipleJobs(filelist, nodelistfile):
-  currentJob = 0
-  checkTime = 3.0 
-  files = checkJobs(filelist)
-  while(currentJob != len(files)):
-    idleNodes = checkAllNodes(nodelistfile)
-    if (idleNodes == []):
-      time.sleep(10.0*checkTime)
+# prepare file&nodelist
+def prepare(flistin, scratch=300, memory=30):
+  flist = []; nlist = []
+  nodes = np.loadtxt("/home/liuchw/shared/renlab.nodes", usecols=(0), unpack=True, dtype="str", skiprows=1) 
+  memorys, cpus, scratches = np.loadtxt("/home/liuchw/shared/renlab.nodes", usecols=(1,2,3), unpack=True, dtype="int", skiprows=1)
+  #check if .log file exists!
+  for f in flistin:
+    if not os.path.isfile(os.path.splitext(f)[0] + ".log"):
+      flist.append(f)
     else:
-      for eachNode in idleNodes:
-        if (currentJob == len(files)):break
-        subOneJob(eachNode,files[currentJob])
-        print(GREEN + "%sSubmitted %s on %s!"%(BLANK20, files[currentJob], eachNode) + ENDC)
-        currentJob += 1
-      if (currentJob == len(files)):
-        break
-      else:
-        time.sleep(10.0*checkTime)
-  return 
+      print('\033[93m' + f"log file exists for {f}!" + '\033[0m') 
+  #select nodes according to scratch/memory
+  for n, s, m in zip(nodes, scratches, memorys):
+    if (s > scratch) and (m > memory):
+      nlist.append(n)
+  return flist, nlist
 
+# main
 def main():
-
-  if len(sys.argv) == 1:
-    sys.exit(RED + " please use '-h' option to see usage" + ENDC)
-
   parser = argparse.ArgumentParser()
-  parser.add_argument('-i', dest = 'input', nargs='+', required=True, help="Input files, with extension of .com, .psi4, or .qchem")  
-  parser.add_argument('-g', dest = 'gauver', default="g09", help="Gaussian version: either g09 or g16. default: g09")  
-  parser.add_argument('-e', dest = 'exnode', default=None, help="Nodelist to be excluded, default: None")  
+  parser.add_argument('-i', dest = 'input',  nargs='+', help = "Input files [x.com, y.psi4, z.qchem]",    required=True)  
+  parser.add_argument('-n', dest = 'nodes',  nargs='+', help = "Submit jobs on these nodes ONLY. Default: []",default=[])  
+  parser.add_argument('-x', dest = 'nodes_', nargs='+', help = "Submit jobs NOT on these nodes. Default: []", default=[])  
+  parser.add_argument('-d', dest = 'disk',   type =int, help = "Disk of requested nodes. Default: 200 (GB)",  default=200)  
+  parser.add_argument('-m', dest = 'memory', type =int, help = "Memory of requested nodes. Default: 30 (GB)", default=30)  
   args = vars(parser.parse_args())
-  global gaus, nodesExcluded 
   inps = args["input"]
-  gaus = args["gauver"]
-  exclude = args["exnode"]
+  nodes = args["nodes"]
+  nodes_ = args["nodes_"]
+  disk = args["disk"]
+  memory = args["memory"] 
 
-
-  welcome = "Welcome to use lsub.py, an automated job submitting script for renlab clusters. Current file formats supported: COM, PSI4, QCHEM"
-  print("\n"+GREEN + BLANK20 + "="*130 + ENDC)
-  print(GREEN + BLANK20 + welcome + ENDC)
-  print(GREEN + BLANK20 + "="*130+"\n" + ENDC)
-
-  if exclude != None:
-    nodesExcluded = np.loadtxt(exclude, usecols=(-1,), dtype="str", unpack=True)
-    print(YELLOW + BLANK20 + "These nodes will be ignored: " + " ".join(nodesExcluded) + ENDC)
+  # use nodes
+  if (nodes == []):
+    qmfiles, nodes = prepare(inps, disk, memory)
   else:
-    nodesExcluded = []
+    qmfiles, _ = prepare(inps, disk, memory)
 
-  jobtype = None 
-  if len(inps) >= 1:
-    ext = inps[0].split(".")[-1]
-    jobtype = ext.upper()
-  else:
-    print(GREEN + BLANK20 + usage + ENDC)
+  # excluding nodes
+  if (nodes_ != []):
+    for ex in nodes_:
+      if (ex in nodes):
+        nodes.remove(ex)
 
-  supportedTypes = ["COM", "PSI4",  "QCHEM"]
-  nodeDict = {"COM"  : "/home/liuchw/Docs/GaussianNode",\
-              "PSI4" : "/home/liuchw/Docs/Psi4Node", \
-              "QCHEM": "/home/liuchw/Docs/QChemNode", }
-  if (jobtype not in supportedTypes):
-    print(RED + "%s%s files not supported!" %(BLANK20,jobtype) + ENDC)
-    sys.exit(1)
+  # detect and submit jobs 
+  jobidx = 0
+  while(jobidx != len(qmfiles)):
+    results = checkNodes(nodes)
+    idlenodes = []
+    for r in results:
+      if (r[1]==0):
+        idlenodes.append(r[0])
+    if (idlenodes == []):time.sleep(30.0)
+    else:
+      for node in idlenodes:
+        if (jobidx == len(qmfiles)):break
+        subOneJob(node,qmfiles[jobidx])
+        print('\033[92m' + "Submitted %s on %s!"%(qmfiles[jobidx],node) + '\033[0m')
+        jobidx += 1
+      if (jobidx == len(qmfiles)):break
+      else:time.sleep(30.0)
+  return
 
-  if (inps != []) and (jobtype in supportedTypes):
-    pairs = []
-    for f in inps:
-      size = os.path.getsize(f)
-      pairs.append((size,f))
-    pairs.sort(key=lambda s: s[0])
-    sortedinps=[]
-    for pair in pairs:
-      sortedinps.append(pair[1])
-    subMultipleJobs(sortedinps, nodeDict[jobtype])
-  return 
-
+# execute
 if __name__ == '__main__':
+  if len(sys.argv) == 1:
+    sys.exit('\033[93m' + " please use '-h' option to see usage" + '\033[0m')
   main()
