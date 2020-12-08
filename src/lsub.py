@@ -18,7 +18,7 @@ def checkone(node):
     topstr = subprocess.check_output(f"ssh {node} 'top -n1 -b'", shell=True).decode("utf-8")
     line = ''.join(list(topstr))
     for exe in exelist:
-      njobs += linestr.count(exe)
+      njobs += line.count(exe)
   except:
     pass
   return node,njobs
