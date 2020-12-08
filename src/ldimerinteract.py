@@ -9,6 +9,7 @@
 
 import argparse
 import numpy as np
+import os
 from scipy.optimize import minimize 
 
 def readXYZ(xyz):
@@ -29,40 +30,23 @@ def rotMatrix(axis, theta):
   b, c, d = -axis*np.sin(theta/2.0)
   aa, bb, cc, dd = a*a, b*b, c*c, d*d
   bc, ad, ac, ab, bd, cd = b*c, a*d, a*c, a*b, b*d, c*d
-  rotmat = np.array([[aa+bb-cc-dd, 2.0*(bc+ad), 2.0*(bd-ac)] ,
-                     [2.0*(bc-ad), aa+cc-bb-dd, 2.0*(cd+ab)] ,
-                     [2.0*(bd+ac), 2.0*(cd-ab), aa+dd-bb-cc]] )
+  rotmat = np.array([[aa+bb-cc-dd, 2.0*(bc+ad), 2.0*(bd-ac)],
+                     [2.0*(bc-ad), aa+cc-bb-dd, 2.0*(cd+ab)],
+                     [2.0*(bd+ac), 2.0*(cd-ab), aa+dd-bb-cc]])
   return rotmat
 
-def main():
-  parser = argparse.ArgumentParser()
-  parser.add_argument('-m1',  dest = 'mono1', required=True)  
-  parser.add_argument('-p1',  dest = 'point1', required=True)  
-  parser.add_argument('-m2',  dest = 'mono2', required=True)  
-  parser.add_argument('-p2',  dest = 'point2', required=True)  
-  parser.add_argument('-o',   dest = 'dimer', required=True)
-  parser.add_argument('-d',   dest = 'distance', default=1.0)
-  parser.add_argument('-w',   dest = 'weight', default=10)
-  args = vars(parser.parse_args())
-  mono1 = args["mono1"]
-  mono2 = args["mono2"]
-  p1 = int(args["point1"])
-  p2 = int(args["point2"])
-  dimer = args["dimer"]
-  distratio = float(args["distance"])
-  weight = float(args["weight"])
-  vdwradius = {"H" : 1.20, "Li": 1.82, "Na": 2.27, "K": 2.75, "Rb": 3.03, "Cs": 3.43, \
-               "Be": 1.53, "Mg": 1.73, "Ca": 2.31, "B": 1.92, "C": 1.70, "N": 1.55, "O":1.52, \
-               "P" : 1.80, "S" : 1.80, "F" : 1.47, "Cl":1.75, "Br":1.85, "Zn":1.39}           
-  
-  atoms1, coords1 = readXYZ(mono1)
-  atoms2, coords2 = readXYZ(mono2)
-  coords1 = coords1 - coords1[p1-1]
-  
-  a1 = atoms1[p1-1]
-  a2 = atoms2[p2-1]
-  dist = distratio*(vdwradius[a1]+vdwradius[a2])
+def hotspots(xyz):
+  xyz2txyz = os.system("babel -ixyz %s -otxyz t.t"%xyz)
+  types = np.loadtxt("t.t", usecols=(5), dtype="int", unpack=True, skiprows=1)
+  spots = []
+  records = []
+  for i in range(len(types)):
+    if types[i] not in records:
+      records.append(types[i])
+      spots.append(i)
+  return spots
 
+def optimize(atoms1, atoms2, coords1, coords2, p1, p2, dist, dimer):
   def costfunc(params):
     func = 0.0
     coord_opt = np.array(params[:3])
@@ -70,7 +54,7 @@ def main():
     theta = params[6] 
     rotmat = rotMatrix(axis, theta)
     coords2_t = []
-    transvec = coord_opt - coords2[p2-1]
+    transvec = coord_opt - coords2[p2]
     for n in range(len(coords2)):
       coord2_t = coord_opt + transvec 
       coords2_t.append(coord2_t)
@@ -83,20 +67,20 @@ def main():
     distsum = 0.0
     for i in range(len(coords1)):
       for j in range(len(coords2_r)):
-        if (i!=p1-1) and (j!=p2-1):
+        if (i!=p1) and (j!=p2):
           distsum += (1.0/distance(coords1[i], coords2_r[j]))
-    func = (np.square(coord_opt).sum()-dist**2) + weight*distsum
+    func = (np.square(coord_opt).sum()-dist**2) + 50.0*distsum
     return func
- 
-  x0 = np.ones(7)
-  ret = minimize(costfunc, x0, method='SLSQP', jac=None, bounds=None, options={'disp': True, 'iprint': 1,  'eps': 1.e-8, 'maxiter': 100, 'ftol': 1e-6})
-  np.savetxt("p0.txt", ret.x,fmt='%15.10f')
 
+  x0 = np.ones(7)
+  ret = minimize(costfunc, x0, method='SLSQP', jac=None, bounds=None, options={'disp': True, 'iprint': 1,  'eps': 1.e-4, 'maxiter': 100, 'ftol': 1e-4})
+  np.savetxt("p0.txt", ret.x,fmt='%15.10f')
+    
   coord_opt = np.array(ret.x[:3])
   axis = np.array(ret.x[3:6])
   theta = ret.x[6] 
 
-  transvec = (coord_opt) - coords2[int(p2)-1]
+  transvec = (coord_opt) - coords2[p2]
   coords2_t = []
   for n in range(len(coords2)):
     coord2_t = coords2[n] + transvec
@@ -110,7 +94,7 @@ def main():
     coords2_r.append(coord2_r)
   coords2_r = np.array(coords2_r)
 
-  transvec = dist*(coords2_r[p2-1])/np.linalg.norm(coords2_r[p2-1]) -coords2_r[p2-1]
+  transvec = dist*(coords2_r[p2])/np.linalg.norm(coords2_r[p2-1]) -coords2_r[p2]
   coords2_rt = []
   for n in range(len(coords2_r)):
     coord2_r = coords2_r[n] + transvec
@@ -120,7 +104,7 @@ def main():
   veryshortdistance = False
   for coord1 in coords1:
     for coord2 in coords2_rt:
-      if distance(coord1, coord2) <= 1.5:
+      if distance(coord1, coord2) <= 1.3:
         veryshortdistance = True
 
   if not veryshortdistance:
@@ -131,6 +115,36 @@ def main():
         f.write("%3s %12.5f%12.5f%12.5f\n"%(atoms1[i], coords1[i][0], coords1[i][1], coords1[i][2]))
       for i in range(len(atoms2)):
         f.write("%3s %12.5f%12.5f%12.5f\n"%(atoms2[i], coords2_rt[i][0], coords2_rt[i][1], coords2_rt[i][2]))
+  return veryshortdistance 
+
+def main():
+  parser = argparse.ArgumentParser()
+  parser.add_argument('-m', dest = 'molecules', nargs='+', required=True, help="molecules in xyz format, e.g. alanine.xyz; can provide multiple")  
+  parser.add_argument('-p', dest = 'probes', nargs='+', required=True, help="probes in xyz format, e.g. water.xyz; can provide multiple")
+  args = vars(parser.parse_args())
+
+  molecules = args["molecules"]
+  probes = args["probes"]
+  
+  vdwradius = {"H" : 1.20, "Li": 1.82, "Na": 2.27, "K": 2.75, "Rb": 3.03, "Cs": 3.43, \
+               "Be": 1.53, "Mg": 1.73, "Ca": 2.31, "B": 1.92, "C": 1.70, "N": 1.55, "O":1.52, \
+               "P" : 1.80, "S" : 1.80, "F" : 1.47, "Cl":1.75, "Br":1.85, "Zn":1.39}           
+
+  for mol in molecules:
+    atoms1, coords1 = readXYZ(mol)
+    mol_spots = hotspots(mol)
+    for prob in probes:
+      atoms2, coords2 = readXYZ(prob)
+      prob_spots = hotspots(prob)
+      number = 1 
+      for p1 in mol_spots:
+        for p2 in prob_spots:
+          a1 = atoms1[p1]
+          a2 = atoms2[p2]
+          dist = (vdwradius[a1]+vdwradius[a2])
+          dimer = mol[:-4] + "-" + prob[:-4] + "_" + str("%03d"%number) + ".xyz"
+          stat = optimize(atoms1, atoms2, coords1, coords2, p1, p2, dist, dimer)
+          if not stat: number += 1
   return
 
 if __name__ == "__main__":
