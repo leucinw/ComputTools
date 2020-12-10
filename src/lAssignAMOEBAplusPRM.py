@@ -29,9 +29,9 @@ def genAtomType(txyz, potent):
     matchDict = dict.fromkeys(matchList, 0)
     commentsDict = dict.fromkeys(matchList, 0)
     if potent.upper() == "CF":
-      lines = open("/home/liuchw/amoebaplus.data/amoebaplusCFluxType.dat").readlines()
+      lines = open(dbdir+"amoebaplusCFluxType.dat").readlines()
     elif potent.upper() == "POLAR":
-      lines = open("/home/liuchw/amoebaplus.data/amoebaplusPolarType.dat").readlines()
+      lines = open(dbdir+"amoebaplusPolarType.dat").readlines()
     else:
       sys.exit(f"{potent} not supported") 
 
