@@ -1,3 +1,4 @@
+#!/home/liuchw/anaconda3/bin/python3
 
 #===================================
 #        Chengwen Liu              #
@@ -13,7 +14,7 @@ from datetime import datetime
 
 def checkone(node):
   njobs = 0
-  exelist = ["psi4","g09","g16","dynamic.x","dynamic", "cp2k.ssmp","mpirun_qchem","orca_mp2_mpi","gmx_mpi","gmx"]
+  exelist = ["psi4","g09","g16","dynamic.x","cp2k.ssmp","mpirun_qchem","orca_mp2_mpi","gmx_mpi","gmx"]
   try:
     topstr = subprocess.check_output(f"ssh {node} 'top -n1 -b'", shell=True).decode("utf-8")
     line = ''.join(list(topstr))
@@ -26,7 +27,7 @@ def checkone(node):
 def checkNodes(nodes):
   nodejobs = []
   now = datetime.now().strftime("%b %d %Y %H:%M:%S")
-  print('\033[91m' + "[" + now + "] " + "Checking availability of RENLAB clusters..." + '\033[0m')
+  print('\033[91m' + "[" + now + "] " + "checking availability of renlab clusters..." + '\033[0m')
   with concurrent.futures.ProcessPoolExecutor() as executor:
     results = [executor.submit(checkone, node) for node in nodes]
     for f in concurrent.futures.as_completed(results):
