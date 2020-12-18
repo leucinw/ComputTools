@@ -36,7 +36,7 @@ def rotMatrix(axis, theta):
   return rotmat
 
 def hotspots(xyz):
-  xyz2txyz = os.system("babel -ixyz %s -otxyz t.t"%xyz)
+  os.system("babel -ixyz %s -otxyz t.t"%xyz)
   types = np.loadtxt("t.t", usecols=(5), dtype="int", unpack=True, skiprows=1)
   spots = []
   records = []
