@@ -11,13 +11,11 @@ import os,sys
 import numpy as np
 from random import random
 
-
-""" 1. put the molecules together to form a reasonable initial cluster;
-    2. use random rotation operations to generate bunch of clusters;
-    3. low-level QM optimization to further optimize the cluster structures;
-    4. select the structures we wanted and do high-level optimization.
-"""
-
+example = "[] means it can be substituted \
+           1. Put [3] [water] molecules together \
+           2. Randomly generate [1000] [water] [trimers] \
+           3. Force Field optimization for [1000] [water] [trimers] \
+           4. Generate QM inputs for the top [20] [water] [trimers] "
 # color
 RED = '\33[91m'
 GREEN = '\33[92m'
@@ -105,7 +103,6 @@ def main():
       f.write("symmetry c1\n}\n\n")
       f.write("set {\nscf_type DF\n")
     return
-#  GAU_LOOSE
 
   def translate(sourcecoords, targetcenter):
     geomcenter = geomCenter(sourcecoords)
