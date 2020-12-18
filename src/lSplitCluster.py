@@ -1,7 +1,14 @@
 
-"""split a tinker xyz cluster file to its monomer xyzs"""
 
-import sys
+#===================================
+#        Chengwen Liu              #
+#      liuchw2010@gmail.com        #
+#   University of Texas at Austin  #
+#===================================
+
+"""split a tinker xyz dimer cluster file to its monomer xyzs"""
+
+import os, sys
 
 def split(pool):
   mono1 = [pool[0]]
@@ -17,7 +24,7 @@ def split(pool):
 
 def writeMono(splitted):
   for i in range(len(splitted)):
-    fname = prefix + "_mono%02d.txyz"%(i+1)
+    fname = prefix + "_m%02d.xyz"%(i+1)
     with open(fname, "w") as f:
       f.write("%3s\n"%len(splitted[i]))
       for j in range(len(splitted[i])):
@@ -32,7 +39,7 @@ def main():
   global lines
   global prefix 
   txyz = sys.argv[1]
-  prefix = sys.argv[2]
+  prefix, _ = os.path.splitext(txyz) 
   lines = open(txyz).readlines()
   natom = len(lines)
   pool = []
@@ -47,4 +54,3 @@ def main():
 
 if __name__ == "__main__":
   main()
-
