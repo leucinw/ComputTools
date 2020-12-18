@@ -133,7 +133,7 @@ def assignCFlux(fname, tinkerkey):
   lines = open(tinkerkey).readlines()
 
   with open(tinkerkey,"a") as f:
-    f.write("# cflux-b parameter assigned from database\n")
+    f.write("# cflux bond parameter assigned from database\n")
     for line in lines:
       if "bond " in line:
         dd = line.split()
@@ -172,7 +172,7 @@ def assignCFlux(fname, tinkerkey):
   tinker2smarts = dict(zip(ttypes, stypes))
   
   with open(tinkerkey, "a") as f:
-    f.write("# cflux-a parameter assigned from database\n")
+    f.write("# cflux angle parameter assigned from database\n")
     for line in lines:
       if "angle " in line:
         dd = line.split()
