@@ -4,52 +4,69 @@
 #      liuchw2010@gmail.com        #
 #   University of Texas at Austin  #
 #===================================
-#
-# make some change here to test git conflict
-#
+
 import argparse
 import os,sys,time
 import subprocess
 import numpy
 
 # color
-RED = '\33[91m'
-GREEN = '\33[92m'
+RED = '\033[91m'
+GREEN = '\033[92m'
 ENDC = '\033[0m'
 
 def main():
-  if len(sys.argv) == 1:
-    print(GREEN + " An example: " + ENDC + "python lconvert.py -i water.xyz -it xyz -o water.com -ot com -j opt -q MP2 -b cc-pvtz -c 0 -s 1 -d 10GB -m 20GB -n 10")
-    sys.exit(RED + " For full usage, please run: " +ENDC + GREEN + "python lconvert.py -h" + ENDC)
-    
-
-  #===>>>
   parser = argparse.ArgumentParser()
-  parser.add_argument('-i',     dest = 'input', required=True)  
-  parser.add_argument('-o',     dest = 'output', required=True)
-  parser.add_argument('-it',    dest = 'inType', required=True, choices=["xyz", "txyz", "g09", "qcout", "mol", "mol2", "sdf", "psiout"])
-  parser.add_argument('-ot',    dest = 'outType', required=True, choices = ["xyz", "qcin", "psi4", "com", "txyz"])
-  parser.add_argument('-q',     dest = 'QM', choices = ["HF", "MP2", "B3LYP", "WB97XD", "BLYP-D3BJ", "WB97X-D3BJ", "CCSD_T", "PBE0", "MP2D", "PBE1PBE"], default="HF", type=str.upper)
-  parser.add_argument('-b',     dest = 'basis',  default = "STO-3G")
-  parser.add_argument('-c',     dest = 'charge', default = "0")
-  parser.add_argument('-c1',    dest = 'charge1', default = None)
-  parser.add_argument('-c2',    dest = 'charge2', default = None)
-  parser.add_argument('-s',     dest = 'spin', default = "1")
-  parser.add_argument('-s1',    dest = 'spin1', default = None)
-  parser.add_argument('-s2',    dest = 'spin2', default = None)
-  parser.add_argument('-n1',    dest = 'number1', default = None)
-  parser.add_argument('-bsse',  dest = 'bsse', default = None)
-  parser.add_argument('-j',     dest = 'jobType', choices = ["opt", "sp", "freq", "cbs", "sapt", "opt+freq", "dipole", "esp"], default="sp", type=str.lower)
-  parser.add_argument('-d',     dest = 'disk', default = "10GB")
-  parser.add_argument('-m',     dest = 'memory', default = "10GB")
-  parser.add_argument('-n',     dest = 'nproc', default = "8")
-  parser.add_argument('-at',    dest = 'atomtype', nargs='+', default = None)
+  parser.add_argument('-i',     dest = 'input', required=True, help="input filename")  
+  parser.add_argument('-o',     dest = 'output', default=None, help="output filename. Optional")
+  parser.add_argument('-it',    dest = 'inType',  required=True, choices = ["xyz", "txyz", "g09", "qcout", "mol", "mol2", "sdf", "psiout"], help="input file type")
+  parser.add_argument('-ot',    dest = 'outType', required=True, choices = ["xyz", "qcin", "psi4", "com", "txyz"], help="output file type")
+  parser.add_argument('-q',     dest = 'QM', default="HF", type=str.upper, help="QM method")
+  parser.add_argument('-b',     dest = 'basis',  default = "STO-3G", help="basis function for quantum job", type=str.lower)
+  parser.add_argument('-c',     dest = 'charge', default = "0", help="total charge of the whole system", type=str.lower)
+  parser.add_argument('-c1',    dest = 'charge1', default = None, help="total charge of the first molecule")
+  parser.add_argument('-c2',    dest = 'charge2', default = None, help="total charge of the second molecule")
+  parser.add_argument('-s',     dest = 'spin', default = "1", help="total spin of the whole system")
+  parser.add_argument('-s1',    dest = 'spin1', default = None, help="total spin of the first molecule")
+  parser.add_argument('-s2',    dest = 'spin2', default = None, help="total spin of the second molecule")
+  parser.add_argument('-n1',    dest = 'number1', default = None, help="number of atoms of the first molecule")
+  parser.add_argument('-bsse',  dest = 'bsse', default = None, help = "use bsse correction, e.g. CP")
+  parser.add_argument('-j',     dest = 'jobType', default="sp", type=str.lower, help="job type, can be opt, sp, freq, cbs, sapt, opt+freq, dipole, esp. Default: sp")
+  parser.add_argument('-d',     dest = 'disk', default = "10GB", help="size of disk to be used. Default: 10GB")
+  parser.add_argument('-m',     dest = 'memory', default = "10GB", help="size of memory to be used. Default: 10GB")
+  parser.add_argument('-n',     dest = 'nproc', default = "8", help="number of cores for Gaussian job. Default: 8")
+  parser.add_argument('-conv',  dest = 'converge', default = " ", help="string, converge cariteria for gaussian opt job. Default: Gaussian default")
+  parser.add_argument('-at',    dest = 'atomtype', nargs='+', default = None, help="atom types for txyz file. Please provide in a row")
   args = vars(parser.parse_args())
 
+  fi = args["input"]
+  fo = args["output"]
+  ti = args["inType"].upper()
+  to = args["outType"].upper()
+  if (fo == None):
+    fo = os.path.splitext(fi)[0] + "." + to.lower()
+    print(fo)
+  cg = args["charge"]
+  qm = args["QM"].upper()
+  if qm == "CCSD_T":
+    qm = "CCSD(T)"
+  bf = args["basis"]
+  sp = int(args["spin"])
+  jt = args["jobType"]
+  dk = args["disk"]
+  me = args["memory"]
+  np = args["nproc"]
+  n1 = args["number1"]
+  bsse = args["bsse"]
+  c1 = args["charge1"]
+  c2 = args["charge2"]
+  s1 = args["spin1"]
+  s2 = args["spin2"]
+  at = args["atomtype"]
+  con = args["converge"]
 
   def ToXYZ(fi,fo):
-    if ti == "XYZ":
-      cmdstr = "babel -ixyz %s -oxyz %s"%(fi, fo)
+    if ti == "XYZ":cmdstr = "babel -ixyz %s -oxyz %s"%(fi, fo)
     elif ti == "TXYZ":
       lines = open(fi).readlines()
       n = len(lines[0].split())
@@ -64,39 +81,20 @@ def main():
     elif ti == "PSIOUT":
       psiout2xyz(fi,fo)
       cmdstr = "echo 'write xyz file from psi4 log!'"
-    elif ti == "G09":
-      cmdstr = "babel -ig09 %s -oxyz %s"%(fi, fo)
-    elif ti == "QCOUT":
-      cmdstr = "babel -iqcout %s -oxyz %s"%(fi, fo)
-    elif ti == "MOL":
-      cmdstr = "babel -imol %s -oxyz %s"%(fi, fo)
-    elif ti == "MOL2":
-      cmdstr = "babel -imol2 %s -oxyz %s"%(fi, fo)
-    elif ti == "SDF":
-      cmdstr = "babel -isdf %s -oxyz %s"%(fi, fo)
+    elif (ti in ["G09", "QCOUT", "MOL", "MOL2", "SDF"]):
+      cmdstr = "babel -i%s %s -oxyz %s"%(ti.lower(), fi, fo)
     else:
       cmdstr = ("echo 'File format %s not supported!'"%ti)
     subprocess.run(cmdstr,shell=True)
     return
 
   def ToTXYZ(fi,fo,at):
-    if ti == "XYZ":
-      cmdstr = "babel -ixyz %s -otxyz %s"%(fi, "tmp.txyz")
+    if ti == "XYZ":cmdstr = "babel -ixyz %s -otxyz %s"%(fi, "tmp.txyz")
     elif ti == "PSIOUT":
       psiout2xyz(fi, "tmp.x")
       cmdstr = "babel -ixyz %s -otxyz %s"%("tmp.x", "tmp.txyz")
-    elif ti == "TXYZ":
-      cmdstr = "babel -itxyz %s -otxyz %s"%(fi, "tmp.txyz")
-    elif ti == "G09":
-      cmdstr = "babel -ig09 %s -otxyz %s"%(fi, "tmp.txyz")
-    elif ti == "QCOUT":
-      cmdstr = "babel -iqcout %s -otxyz %s"%(fi, "tmp.txyz")
-    elif ti == "MOL":
-      cmdstr = "babel -imol %s -otxyz %s"%(fi, "tmp.txyz")
-    elif ti == "MOL2":
-      cmdstr = "babel -imol2 %s -otxyz %s"%(fi, "tmp.txyz")
-    elif ti == "SDF":
-      cmdstr = "babel -isdf %s -otxyz %s"%(fi, "tmp.txyz")
+    elif (ti in ["TXYZ", "G09", "QCOUT", "MOL", "MOL2", "SDF"]):
+      cmdstr = "babel -i%s %s -otxyz %s"%(ti.lower(), fi, "tmp.txyz")
     else:
       cmdstr = ("echo 'File format %s not supported!'"%ti)
     subprocess.run(cmdstr,shell=True)
@@ -125,20 +123,8 @@ def main():
     elif ti == "PSIOUT":
       psiout2xyz(fi, 'tmp.x')
       cmdstr = "babel -ixyz %s -ogau %s"%("tmp.x", fo)
-    elif ti == "TXYZ":
-      cmdstr = "babel -itxyz %s -ogau %s"%(fi, fo)
-    elif ti == "COM":
-      cmdstr = "babel -icom %s -ogau %s"%(fi, fo)
-    elif ti == "G09":
-      cmdstr = "babel -ig09 %s -ogau %s"%(fi, fo)
-    elif ti == "QCOUT":
-      cmdstr = "babel -iqcout %s -ogau %s"%(fi, fo)
-    elif ti == "MOL":
-      cmdstr = "babel -imol %s -ogau %s"%(fi, fo)
-    elif ti == "MOL2":
-      cmdstr = "babel -imol2 %s -ogau %s"%(fi, fo)
-    elif ti == "SDF":
-      cmdstr = "babel -isdf %s -ogau %s"%(fi, fo)
+    elif (ti in ["TXYZ", "COM", "G09", "QCOUT", "MOL", "MOL2", "SDF"]):
+      cmdstr = "babel -i%s %s -ogau %s"%(ti.lower(), fi, fo)
     else:
       cmdstr = ("echo 'File format %s not supported!'"%ti)
     subprocess.run(cmdstr,shell=True)
@@ -149,7 +135,10 @@ def main():
     mem   = "%Mem="+me +"\n"
     
     if (jt.upper() == "OPT"):
-      extra = "(calcFC, maxcyc=200) IOP(5/13=1)\n"
+      if con == ' ':
+        extra =  "opt(calcFC, maxcycle=400) IOP(5/13=1) \n"
+      else:
+        extra =  "opt(calcFC, maxcycle=400, %s) IOP(5/13=1) \n"%con
     elif (jt.upper() == "OPT+FREQ"):
       extra = "IOP(5/13=1)\n"
     else:
@@ -164,6 +153,8 @@ def main():
       key = " ".join(["#P", qm+"/"+bf, "opt", "freq", "MaxDisk=%s"%dk, extra])
     elif jt.upper() == "ESP":
       key = " ".join(["#P", qm+"/"+bf, " SP Density=Current SCF=Save NoSymm", "MaxDisk=%s"%dk, extra])
+    elif jt.upper() == "OPT":
+      key = " ".join(["#P", qm+"/"+bf,"NoSymm MaxDisk=%s"%dk, extra])
     else:
       key = " ".join(["#P", qm+"/"+bf, jt, "NoSymm MaxDisk=%s"%dk, extra])
     comment = " Generated by lconvert.py for %s job\n"%jt
@@ -188,23 +179,11 @@ def main():
   def ToQCHEM(fi,fo):
     if ti == "XYZ":
       cmdstr = "babel -ixyz %s -oqcin %s"%(fi, fo)
-    if ti == "PSIOUT":
+    elif ti == "PSIOUT":
       psiout2xyz(fi, "tmp.x")
       cmdstr = "babel -ixyz %s -oqcin %s"%("tmp.x", fo)
-    elif ti == "TXYZ":
-      cmdstr = "babel -itxyz %s -oqcin %s"%(fi, fo)
-    elif ti == "COM":
-      cmdstr = "babel -icom %s -oqcin %s"%(fi, fo)
-    elif ti == "G09":
-      cmdstr = "babel -ig09 %s -oqcin %s"%(fi, fo)
-    elif ti == "QCOUT":
-      cmdstr = "babel -iqcout %s -oqcin %s"%(fi, fo)
-    elif ti == "MOL":
-      cmdstr = "babel -imol %s -oqcin %s"%(fi, fo)
-    elif ti == "MOL2":
-      cmdstr = "babel -imol2 %s -oqcin %s"%(fi, fo)
-    elif ti == "SDF":
-      cmdstr = "babel -isdf %s -oqcin %s"%(fi, fo)
+    elif (ti in ["TXYZ", "COM", "G09", "QCOUT", "MOL", "MOL2", "SDF"]):
+      cmdstr = "babel -i%s %s -oqcin %s"%(ti.lower(), fi, fo)
     else:
       cmdstr = ("echo 'File format %s not supported!'"%ti)
     subprocess.run(cmdstr,shell=True)
@@ -292,7 +271,7 @@ def main():
             else:
               fout.write("energy('ccsd(t)/%s', bsse_type='%s')\n"%(bf, bsse))
         else: 
-          fout.write("e_convergence 7\nreference rhf\n}\n\n")
+          fout.write("e_convergence 7\nreference rhf\n\n\n")
           if jt.upper() == "SP":
             if not bsse:
               fout.write("energy('%s/%s')\n"%(qm,bf))
@@ -316,20 +295,8 @@ def main():
     elif ti == "PSIOUT":
       psiout2xyz(fi, "tmp.xyz")
       cmdstr = "echo 'write xyz file from psi4 log!'"
-    elif ti == "TXYZ":
-      cmdstr = "babel -itxyz %s -oxyz %s"%(fi, "tmp.xyz")
-    elif ti == "COM":
-      cmdstr = "babel -icom %s -oxyz %s"%(fi, "tmp.xyz")
-    elif ti == "G09":
-      cmdstr = "babel -ig09 %s -oxyz %s"%(fi, "tmp.xyz")
-    elif ti == "QCOUT":
-      cmdstr = "babel -iqcout %s -oxyz %s"%(fi, "tmp.xyz")
-    elif ti == "MOL":
-      cmdstr = "babel -imol %s -oxyz %s"%(fi, "tmp.xyz")
-    elif ti == "MOL2":
-      cmdstr = "babel -imol2 %s -oxyz %s"%(fi, "tmp.xyz")
-    elif ti == "SDF":
-      cmdstr = "babel -isdf %s -oxyz %s"%(fi, "tmp.xyz")
+    elif (ti in ["TXYZ", "COM", "G09", "QCOUT", "MOL", "MOL2", "SDF"]):
+      cmdstr = "babel -i%s %s -oxyz %s"%(ti.lower(), fi, "tmp.xyz")
     else:
       cmdstr = ("echo 'File format %s not supported!'"%ti)
     subprocess.run(cmdstr,shell=True)
@@ -355,28 +322,6 @@ def main():
         fxyz.write("%3s%12.6f%12.6f%12.6f\n"%(atoms[n], float(coords[n][0]), float(coords[n][1]), float(coords[n][2])))
     return
           
-  fi = args["input"]
-  fo = args["output"]
-  ti = args["inType"].upper()
-  to = args["outType"].upper()
-  cg = args["charge"]
-  qm = args["QM"].upper()
-  if qm == "CCSD_T":
-    qm = "CCSD(T)"
-  bf = args["basis"]
-  sp = int(args["spin"])
-  jt = args["jobType"]
-  dk = args["disk"]
-  me = args["memory"]
-  np = args["nproc"]
-  n1 = args["number1"]
-  bsse = args["bsse"]
-  c1 = args["charge1"]
-  c2 = args["charge2"]
-  s1 = args["spin1"]
-  s2 = args["spin2"]
-  at = args["atomtype"]
-
   if (to == "COM"):
     ToCOM(fi, fo)
   elif (to == "PSI4"):
@@ -392,4 +337,7 @@ def main():
   return
 
 if __name__ == "__main__":
+  if len(sys.argv) == 1:
+    print(GREEN + " An example: " + ENDC + "python lconvert.py -i water.xyz -it xyz [-o water.com] -ot com -j opt -q MP2 -b cc-pvtz -c 0 -s 1 -d 10GB -m 20GB -n 10")
+    sys.exit(RED + " For full usage, please run: " +ENDC + GREEN + "python lconvert.py -h" + ENDC)
   main()
