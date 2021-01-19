@@ -103,12 +103,14 @@ def assignNonbonded(fname, tinkerkey):
   with open(tinkerkey, "a") as f:
     f.write("# charge penetration parameters assigned from database\n")
     for t in tinkerCPDict:
-      line = "cp  %5s%10.5f%10.5f\n"%(t, tinkerCPDict[t][0], tinkerCPDict[t][1])
+      #line = "cp  %5s%10.5f%10.5f\n"%(t, tinkerCPDict[t][0], tinkerCPDict[t][1])
+      line = "chgpen  %5s%10.5f%10.5f\n"%(t, tinkerCPDict[t][1], tinkerCPDict[t][0])
       f.write(line)
     print(GREEN + "charge penetration parameters assigned from database"+ ENDC)
     f.write("# charge transfer parameters assigned from database\n")
     for t in tinkerCTDict:
-      line = "ct  %5s%10.5f%10.5f\n"%(t, tinkerCTDict[t][0], tinkerCTDict[t][1])
+      #line = "ct  %5s%10.5f%10.5f\n"%(t, tinkerCTDict[t][0], tinkerCTDict[t][1])
+      line = "chgtrn  %5s%10.5f%10.5f\n"%(t, tinkerCTDict[t][0]*3.01147, tinkerCTDict[t][1])
       f.write(line)
     print(GREEN + "charge transfer parameters assigned from database" + ENDC)
     f.write("# van der Waals parameters assigned from database\n")
@@ -143,10 +145,10 @@ def assignCFlux(fname, tinkerkey):
           comb1 = s1 + "_" + s2
           comb2 = s2 + "_" + s1
           if comb1 in smartsCFbondDict:
-            f.write("cflux-b %s %s %10.5f\n"%(dd[1], dd[2], float(smartsCFbondDict[comb1])))
+            f.write("bndcflux %s %s %10.5f\n"%(dd[1], dd[2], float(smartsCFbondDict[comb1])))
             print(GREEN + "CFlux parameter assigned for bond %s-%s"%(dd[1], dd[2]) + ENDC)
           elif comb2 in smartsCFbondDict:
-            f.write("cflux-b %s %s %10.5f\n"%(dd[1], dd[2], float(smartsCFbondDict[comb2])))
+            f.write("bndcflux %s %s %10.5f\n"%(dd[1], dd[2], float(smartsCFbondDict[comb2])))
             print(GREEN + "CFlux parameter assigned for bond %s-%s"%(dd[1], dd[2]) + ENDC)
           else:
             print(RED + "CFlux parameter NOT found for bond %s-%s"%(dd[1], dd[2]) + ENDC)
@@ -163,6 +165,9 @@ def assignCFlux(fname, tinkerkey):
     types_r.append(t3 + "_" + t2 + "_" + t1)
 
   for jt1, jt2, jb1, jb2 in zip(jtheta1, jtheta2, jbond1, jbond2):
+    # convert jt unit from e/degree to e/radian
+    jt1 *= 57.2958
+    jt2 *= 57.2958
     jparams.append(" ".join(["%10.5f"%jt1, "%10.5f"%jt2, "%10.5f"%jb1, "%10.5f"%jb2]))
     jparams_r.append(" ".join(["%10.5f"%jt2, "%10.5f"%jt1, "%10.5f"%jb2, "%10.5f"%jb1]))
   
@@ -183,10 +188,10 @@ def assignCFlux(fname, tinkerkey):
           comb1 = s1 + "_" + s2 + "_" + s3
           comb2 = s3 + "_" + s2 + "_" + s1
           if comb1 in smartsCFangleDict:
-            f.write("cflux-a %s %s %s %s\n"%(dd[1], dd[2], dd[3], smartsCFangleDict[comb1]))
+            f.write("angcflux %s %s %s %s\n"%(dd[1], dd[2], dd[3], smartsCFangleDict[comb1]))
             print(GREEN + "CFlux parameters found for angle %s-%s-%s"%(dd[1], dd[2], dd[3]) + ENDC)
           elif comb2 in smartsCFangleDict:
-            f.write("cflux-a %s %s %s %s\n"%(dd[1], dd[2], dd[3], smartsCFangleDict_r[comb2]))
+            f.write("angcflux %s %s %s %s\n"%(dd[1], dd[2], dd[3], smartsCFangleDict_r[comb2]))
             print(GREEN + "CFlux parameters found for angle %s-%s-%s"%(dd[1], dd[2], dd[3]) + ENDC)
           else:
             print(RED + "CFlux parameters NOT found for angle %s-%s-%s"%(dd[1], dd[2], dd[3]) + ENDC)
