@@ -1,4 +1,3 @@
-#!/home/liuchw/anaconda3/bin/python3
 
 #===================================
 #        Chengwen Liu              #
@@ -6,15 +5,20 @@
 #   University of Texas at Austin  #
 #===================================
 
-import os,time,sys,subprocess
+import os
+import sys
+import time
+import subprocess
 import argparse
 import numpy as np
 import concurrent.futures 
+from tqdm import tqdm
 from datetime import datetime
 
+'''check the availability of ONE node'''
 def checkone(node):
   njobs = 0
-  exelist = ["psi4","g09","g16","dynamic.x","cp2k.ssmp","mpirun_qchem","orca_mp2_mpi","gmx_mpi","gmx"]
+  exelist = ["psi4","g09","g16","dynamic", "dynamic.x","cp2k.ssmp","mpirun_qchem","orca_mp2_mpi","gmx_mpi","gmx"]
   try:
     topstr = subprocess.check_output(f"ssh {node} 'top -n1 -b'", shell=True).decode("utf-8")
     line = ''.join(list(topstr))
@@ -24,16 +28,30 @@ def checkone(node):
     pass
   return node,njobs
 
+'''check the availability of ALL node'''
 def checkNodes(nodes):
   nodejobs = []
-  now = datetime.now().strftime("%b %d %Y %H:%M:%S")
-  print('\033[91m' + "[" + now + "] " + "checking availability of renlab clusters..." + '\033[0m')
   with concurrent.futures.ProcessPoolExecutor() as executor:
     results = [executor.submit(checkone, node) for node in nodes]
     for f in concurrent.futures.as_completed(results):
       nodejobs.append(f.result())
   return nodejobs 
 
+'''prepare input filelist and nodelist that meets users requirements'''
+def prepare(flistin, scratch=300, memory=30, maxmem=999):
+  flist = []
+  nlist = []
+  nodes = np.loadtxt("/home/liuchw/shared/renlab.nodes", usecols=(0), unpack=True, dtype="str", skiprows=1) 
+  memorys, cpus, scratches = np.loadtxt("/home/liuchw/shared/renlab.nodes", usecols=(1,2,3), unpack=True, dtype="int", skiprows=1)
+  for f in flistin:
+    if not os.path.isfile(os.path.splitext(f)[0] + ".log"):
+      flist.append(f)
+  for n, s, m in zip(nodes, scratches, memorys):
+    if (s > scratch) and (m > memory) and (m < maxmem):
+      nlist.append(n)
+  return flist, nlist
+
+'''submit ONE qm job to ONE node'''
 def subOneJob(node,qmfile):
   f, ext = os.path.splitext(qmfile)
   cwd = os.getcwd()
@@ -51,19 +69,6 @@ def subOneJob(node,qmfile):
   subprocess.run(cmdstr,shell=True)
   return
 
-def prepare(flistin, scratch=300, memory=30, maxmem=999):
-  flist = []; nlist = []
-  nodes = np.loadtxt("/home/liuchw/shared/renlab.nodes", usecols=(0), unpack=True, dtype="str", skiprows=1) 
-  memorys, cpus, scratches = np.loadtxt("/home/liuchw/shared/renlab.nodes", usecols=(1,2,3), unpack=True, dtype="int", skiprows=1)
-  for f in flistin:
-    if not os.path.isfile(os.path.splitext(f)[0] + ".log"):
-      flist.append(f)
-    else:
-      print('\033[93m' + f"log file exists for {f}!" + '\033[0m') 
-  for n, s, m in zip(nodes, scratches, memorys):
-    if (s > scratch) and (m > memory) and (m < maxmem):
-      nlist.append(n)
-  return flist, nlist
 
 def main():
   parser = argparse.ArgumentParser()
@@ -81,32 +86,33 @@ def main():
   memory = args["memory"] 
   maxmem = args["maxmem"] 
 
+  # prepare flist, nlist
   if (nodes == []):
     qmfiles, nodes = prepare(inps, disk, memory, maxmem)
+  # prepare flist only if nlist is specified
   else:
     qmfiles, _ = prepare(inps, disk, memory, maxmem)
-
+  # remove the nodes user want to exclude
   if (xnodes != []):
     for ex in xnodes:
       if (ex in nodes):
         nodes.remove(ex)
-
-  jobidx = 0
-  while(jobidx != len(qmfiles)):
-    results = checkNodes(nodes)
-    idlenodes = []
-    for r in results:
-      if (r[1]==0):
-        idlenodes.append(r[0])
-    if (idlenodes == []):time.sleep(30.0)
-    else:
-      for node in idlenodes:
-        if (jobidx == len(qmfiles)):break
-        subOneJob(node,qmfiles[jobidx])
-        print('\033[92m' + "Submitted %s on %s!"%(qmfiles[jobidx],node) + '\033[0m')
-        jobidx += 1
-      if (jobidx == len(qmfiles)):break
-      else:time.sleep(30.0)
+  # submit jobs; virualize using progress bar
+  if len(qmfiles) > 0:
+    print('\033[92m' + "Nodes For You: %s"%(" ".join(nodes)) + '\033[0m')
+    pbar = tqdm(range(len(qmfiles)))
+    for jobidx in pbar:
+      results = checkNodes(nodes)
+      idlenodes = []
+      for r in results:
+        if (r[1]==0):
+          idlenodes.append(r[0])
+      while (idlenodes == []):
+        time.sleep(30.0)
+      subOneJob(idlenodes[0],qmfiles[jobidx])
+      pbar.set_description('\033[93m' + "PROGRESS" '\033[0m')
+  else:
+    print('\033[91m' + "Outputs already exist for your inputs!!" + '\033[0m')
   return
 
 if len(sys.argv) == 1:
