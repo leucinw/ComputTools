@@ -1,84 +1,56 @@
 
+#===================================
+#        Chengwen Liu              #
+#      liuchw2010@gmail.com        #
+#   University of Texas at Austin  #
+#===================================
+
 '''Prepare an interaction.txt that can be used as a ForceBalance interaction energy target'''
 
-import os,sys
+import os
+import sys
+import string
+import numpy as np
 
-clusters = []
-monomers = []
-energies = []
-systems  = []
-BEnames  = []
-weights  = []
+inputfile = sys.argv[1]
+dimerxyzs = np.loadtxt(inputfile, usecols=(0), dtype="str", unpack=True, skiprows=1) 
+energies,weights = np.loadtxt(inputfile, usecols=(1,2), dtype="float", unpack=True, skiprows=1) 
 
-lines = open(sys.argv[1]).readlines()
-for line in lines:
-  dd = line.split()
-  clusters.append(dd[0])
-  monomers.append(dd[2:-2])
-  energies.append(dd[-2])
-  weights.append(dd[-1])
-  systems.append(dd[1])
-  BEnames.append("BE_"+dd[0].split(".xyz")[0])
+alphabet = string.ascii_lowercase
+ndimer = len(dimerxyzs)
+if (3*ndimer <= 26):
+  shortNameList = list(alphabet)
+elif (26 < 3*ndimer <= 26*26):
+  for i in list(alphabet):
+    for j in list(alphabet):
+      shortNameList.append(i+j)
+elif (26*26 < 3*ndimer <= 26*26*26):
+  for i in list(alphabet):
+    for j in list(alphabet):
+      for k in list(alphabet):
+        shortNameList.append(i+j+k)
+else:
+  print("Too many xyz file provided?")
 
-mono_sys_dict = { "Methane.xyz"   : "Meth",
-                  "Ethane.xyz"    : "Eth",
-                  "Propane.xyz"   : "Prop",
-                  "Methanol.xyz"  : "MeOH",
-                  "Ethanol.xyz"   : "EtOH",
-                  "1-Propanol.xyz": "nPropOH",
-                  "2-Propanol.xyz": "isoPropOH",
-                  "dimer01_mono01.xyz" : "dimer01_mono01",
-                  "dimer02_mono01.xyz" : "dimer02_mono01",
-                  "dimer03_mono01.xyz" : "dimer03_mono01",
-                  "dimer04_mono01.xyz" : "dimer04_mono01",
-                  "dimer05_mono01.xyz" : "dimer05_mono01",
-                  "dimer06_mono01.xyz" : "dimer06_mono01",
-                  "dimer07_mono01.xyz" : "dimer07_mono01",
-                  "dimer08_mono01.xyz" : "dimer08_mono01",
-                  "dimer09_mono01.xyz" : "dimer09_mono01",
-                  "dimer10_mono01.xyz" : "dimer10_mono01",
-                  "dimer11_mono01.xyz" : "dimer11_mono01",
-                  "dimer12_mono01.xyz" : "dimer12_mono01",
-                  "dimer13_mono01.xyz" : "dimer13_mono01",
-                  "dimer14_mono01.xyz" : "dimer14_mono01",
-                  "dimer15_mono01.xyz" : "dimer15_mono01",
-                  "dimer16_mono01.xyz" : "dimer16_mono01",
-                  "dimer17_mono01.xyz" : "dimer17_mono01",
-                  "dimer18_mono01.xyz" : "dimer18_mono01",
-                  "dimer19_mono01.xyz" : "dimer19_mono01",
-                  "dimer20_mono01.xyz" : "dimer20_mono01",
-                  "dimer01_mono02.xyz" : "dimer01_mono02",
-                  "dimer02_mono02.xyz" : "dimer02_mono02",
-                  "dimer03_mono02.xyz" : "dimer03_mono02",
-                  "dimer04_mono02.xyz" : "dimer04_mono02",
-                  "dimer05_mono02.xyz" : "dimer05_mono02",
-                  "dimer06_mono02.xyz" : "dimer06_mono02",
-                  "dimer07_mono02.xyz" : "dimer07_mono02",
-                  "dimer08_mono02.xyz" : "dimer08_mono02",
-                  "dimer09_mono02.xyz" : "dimer09_mono02",
-                  "dimer10_mono02.xyz" : "dimer10_mono02",
-                  "dimer11_mono02.xyz" : "dimer11_mono02",
-                  "dimer12_mono02.xyz" : "dimer12_mono02",
-                  "dimer13_mono02.xyz" : "dimer13_mono02",
-                  "dimer14_mono02.xyz" : "dimer14_mono02",
-                  "dimer15_mono02.xyz" : "dimer15_mono02",
-                  "dimer16_mono02.xyz" : "dimer16_mono02",
-                  "dimer17_mono02.xyz" : "dimer17_mono02",
-                  "dimer18_mono02.xyz" : "dimer18_mono02",
-                  "dimer19_mono02.xyz" : "dimer19_mono02",
-                  "dimer20_mono02.xyz" : "dimer20_mono02",
-                }
+allxyzs = []
+for xyz in dimerxyzs:
+  if "_1.00.xyz" in xyz:
+    allxyzs.append(xyz.replace(".xyz", "_m01.xyz"))
+    allxyzs.append(xyz.replace(".xyz", "_m02.xyz"))
+
+BEnames = ["BE_" + x for x in shortNameList[len(allxyzs): len(allxyzs) + ndimer]]
+
+allxyzs = allxyzs + list(dimerxyzs)
+ntotal = len(allxyzs)
+systems = shortNameList[0:ntotal] 
+xyz_system = dict(zip(allxyzs, systems))
 
 with open("interactions.txt",'w') as f:
   f.write('$global\nkeyfile interactions.key\nenergy_unit kilocalories_per_mole\n$end\n\n')
-  for syst, clst in zip(systems,clusters): 
+  for syst, clst in zip(systems,allxyzs): 
     f.write('$system\nname %s\ngeometry %s\n$end\n\n'%(syst, clst))
-  for mono in mono_sys_dict:
-    if os.path.isfile(mono): 
-      f.write('$system\nname %s\ngeometry %s\n$end\n\n'%(mono_sys_dict[mono], mono))
-  for i in range(len(systems)):
-    equ = systems[i]
-    for j in range(len(monomers[i])):
-      equ += " - " + mono_sys_dict[monomers[i][j]] + " "
+  for i in range(len(dimerxyzs)):
+    k1 = dimerxyzs[i][:-8] + "1.00_m01.xyz"
+    k2 = dimerxyzs[i][:-8] + "1.00_m02.xyz"
+    equ = xyz_system[dimerxyzs[i]] + " - "  + xyz_system[k1] + " - " + xyz_system[k2]
     f.write('$interaction\nname %s\nequation %s\nenergy  %s\nweight %s\n$end\n\n'%(BEnames[i], equ, energies[i], weights[i]))
-
