@@ -244,38 +244,60 @@ def main():
         fout.write("set {\nscf_type DF\n")
         if qm == "MP2":
           fout.write("mp2_type DF\ne_convergence 7\nreference rhf\n}\n\n")
-          if jt.upper() == "CBS" and bf.upper()=="AUG-CC-PVTZ":
+          if jt.upper() == "CBS": 
             if not bsse:
-              fout.write("energy('mp2/aug-cc-pv[tq]z')\n")
+              if bf.upper() == "CC-PVTZ":
+                fout.write("energy('mp2/cc-pv[tq]z')\n")
+              elif bf.upper() == "AUG-CC-PVTZ":
+                fout.write("energy('mp2/aug-cc-pv[tq]z')\n")
+              else:
+                sys.exit("MP2 CBS with %s is not supported!"%bf.upper())
             else:
-              fout.write("energy('mp2/aug-cc-pv[tq]z', bsse_type='%s')\n"%bsse)
-          if jt.upper() == "CBS" and bf.upper()=="CC-PVTZ":
-            if not bsse:
-              fout.write("energy('mp2/cc-pv[tq]z')\n")
-            else:
-              fout.write("energy('mp2/cc-pv[tq]z', bsse_type='%s')\n"%bsse)
-          if jt.upper() == "SP":
+              if bf.upper() == "CC-PVTZ":
+                fout.write("energy('mp2/cc-pv[tq]z', bsse_type='%s')\n"%bsse)
+              elif bf.upper() == "AUG-CC-PVTZ":
+                fout.write("energy('mp2/aug-cc-pv[tq]z', bsse_type='%s')\n"%bsse)
+              else:
+                sys.exit("MP2 CBS BSSE with %s is not supported!"%bf.upper())
+          elif jt.upper() == "SP":
             if not bsse:
               fout.write("energy('mp2/%s')\n"%bf)
             else:
               fout.write("energy('mp2/%s', bsse_type='%s')\n"%(bf,bsse))
+          elif jt.upper() == "OPT":
+            fout.write("set opt_coordinates cartesian\n")
+            fout.write("set g_convergence GAU\n")
+            fout.write("set GEOM_MAXITER 400\n")
+            fout.write("optimize('mp2/%s')\n"%bf)
+            fout.write("\n")
+          else:
+            sys.exit("MP2 with %s is not supported!"%jt.upper())
         elif qm == "MP2D":
           fout.write("mp2_type DF\ne_convergence 7\nreference rhf\n}\n\n")
-          if jt.upper() == "CBS" and bf.upper()=="AUG-CC-PVTZ":
+          if jt.upper() == "CBS": 
             if not bsse:
-              fout.write("energy('mp2d/aug-cc-pv[tq]z')\n")
+              if bf.upper() == "CC-PVTZ":
+                fout.write("energy('mp2d/cc-pv[tq]z')\n")
+              elif bf.upper() == "AUG-CC-PVTZ":
+                fout.write("energy('mp2d/aug-cc-pv[tq]z')\n")
+              else:
+                sys.exit("MP2D CBS with %s is not supported!"%bf.upper())
             else:
-              fout.write("energy('mp2d/aug-cc-pv[tq]z', bsse_type='%s')\n"%bsse)
-          if jt.upper() == "CBS" and bf.upper()=="CC-PVTZ":
-            if not bsse:
-              fout.write("energy('mp2d/cc-pv[tq]z')\n")
-            else:
-              fout.write("energy('mp2d/cc-pv[tq]z', bsse_type='%s')\n"%bsse)
-          if jt.upper() == "SP":
+              if bf.upper() == "CC-PVTZ":
+                fout.write("energy('mp2d/cc-pv[tq]z', bsse_type='%s')\n"%bsse)
+              elif bf.upper() == "AUG-CC-PVTZ":
+                fout.write("energy('mp2d/aug-cc-pv[tq]z', bsse_type='%s')\n"%bsse)
+              else:
+                sys.exit("MP2D CBS BSSE with %s is not supported!"%bf.upper())
+          elif jt.upper() == "SP":
             if not bsse:
               fout.write("energy('mp2d/%s')\n"%bf)
             else:
               fout.write("energy('mp2d/%s', bsse_type='%s')\n"%(bf,bsse))
+          elif jt.upper() == "OPT":
+            fout.write("optimize('mp2d/%s')\n"%bf)
+          else:
+            sys.exit("MP2D with %s is not supported!"%jt.upper())
         elif qm == "CCSD(T)":
           fout.write("mp2_type DF\ne_convergence 7\nreference rhf\n}\n\n")
           if jt.upper() == "CBS":
