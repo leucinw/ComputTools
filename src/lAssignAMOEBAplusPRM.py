@@ -103,6 +103,7 @@ def assignNonbonded(fname, tinkerkey):
   with open(tinkerkey, "a") as f:
     f.write("# charge penetration parameters assigned from database\n")
     for t in tinkerCPDict:
+      ''' the commented out line is for old tinker 8.2 '''
       #line = "cp  %5s%10.5f%10.5f\n"%(t, tinkerCPDict[t][0], tinkerCPDict[t][1])
       line = "chgpen  %5s%10.5f%10.5f\n"%(t, tinkerCPDict[t][1], tinkerCPDict[t][0])
       f.write(line)
@@ -125,6 +126,7 @@ def assignNonbonded(fname, tinkerkey):
 
 def assignCFlux(fname, tinkerkey):
   #cflux-b
+  '''bond cflux atom indices are interchangable'''
   type1, type2, jbonds = np.loadtxt(dbdir+"cfbond.prm", usecols=(-2,-1,1), unpack=True, dtype="str",skiprows=1)
   types = []
   for t1, t2 in zip(type1, type2):
@@ -135,7 +137,7 @@ def assignCFlux(fname, tinkerkey):
   lines = open(tinkerkey).readlines()
 
   with open(tinkerkey,"a") as f:
-    f.write("# cflux bond parameter assigned from database\n")
+    f.write("# CHGFLX parameters assigned from database\n")
     for line in lines:
       if "bond " in line:
         dd = line.split()
@@ -154,47 +156,52 @@ def assignCFlux(fname, tinkerkey):
             print(RED + "CFlux parameter NOT found for bond %s-%s"%(dd[1], dd[2]) + ENDC)
 
   #cflux-a
+  '''angle cflux in parameter file is in the right order for jt1,jt2,jb1,jb2'''
+  '''when assign parameters, need to first sort the angle atom indices, then to match database'''
   type1, type2, type3  = np.loadtxt(dbdir+"cfangle.prm", usecols=(-3, -2, -1), unpack=True, dtype="str",skiprows=1)
   jtheta1, jtheta2, jbond1, jbond2  = np.loadtxt(dbdir+"cfangle.prm", usecols=(1, 2, 3, 4), unpack=True, dtype="float",skiprows=1)
 
-  types = []; types_r = []
-  jparams = []; jparams_r = []
+  types = []
+  jparams = []
 
+  '''store two sets of parameters considering the assymetry of angle-cflux'''
   for t1, t2, t3 in zip(type1, type2, type3):
     types.append(t1 + "_" + t2 + "_" + t3)
-    types_r.append(t3 + "_" + t2 + "_" + t1)
+    types.append(t3 + "_" + t2 + "_" + t1)
 
   for jt1, jt2, jb1, jb2 in zip(jtheta1, jtheta2, jbond1, jbond2):
     # convert jt unit from e/degree to e/radian
+    '''this will be compatitable with new tinker version >= 8.7'''
     jt1 *= 57.2958
     jt2 *= 57.2958
     jparams.append(" ".join(["%10.5f"%jt1, "%10.5f"%jt2, "%10.5f"%jb1, "%10.5f"%jb2]))
-    jparams_r.append(" ".join(["%10.5f"%jt2, "%10.5f"%jt1, "%10.5f"%jb2, "%10.5f"%jb1]))
+    jparams.append(" ".join(["%10.5f"%jt2, "%10.5f"%jt1, "%10.5f"%jb2, "%10.5f"%jb1]))
   
   smartsCFangleDict = dict(zip(types, jparams))
-  smartsCFangleDict_r = dict(zip(types, jparams_r))
   ttypes, stypes = np.loadtxt(f"{fname}.type", usecols=(1,2), unpack=True, dtype="str")
   tinker2smarts = dict(zip(ttypes, stypes))
   
   with open(tinkerkey, "a") as f:
-    f.write("# cflux angle parameter assigned from database\n")
     for line in lines:
       if "angle " in line:
         dd = line.split()
-        if (dd[1] in ttypes) and (dd[2] in ttypes) and (dd[3] in ttypes):
-          s1 = tinker2smarts[dd[1]]
-          s2 = tinker2smarts[dd[2]]
-          s3 = tinker2smarts[dd[3]]
-          comb1 = s1 + "_" + s2 + "_" + s3
-          comb2 = s3 + "_" + s2 + "_" + s1
-          if comb1 in smartsCFangleDict:
-            f.write("angcflux %s %s %s %s\n"%(dd[1], dd[2], dd[3], smartsCFangleDict[comb1]))
-            print(GREEN + "CFlux parameters found for angle %s-%s-%s"%(dd[1], dd[2], dd[3]) + ENDC)
-          elif comb2 in smartsCFangleDict:
-            f.write("angcflux %s %s %s %s\n"%(dd[1], dd[2], dd[3], smartsCFangleDict_r[comb2]))
-            print(GREEN + "CFlux parameters found for angle %s-%s-%s"%(dd[1], dd[2], dd[3]) + ENDC)
+        angletype1 = dd[1]
+        angletype2 = dd[2]
+        angletype3 = dd[3]
+        if (angletype1 in ttypes) and (angletype2 in ttypes) and (angletype3 in ttypes):
+          '''always make sure type1 <= type3'''
+          if int(angletype1) > int(angletype3):
+            angletype1, angletype3 = angletype3, angletype1
+            print("flipped angletype1 and angletype3")
+          s1 = tinker2smarts[angletype1]
+          s2 = tinker2smarts[angletype2]
+          s3 = tinker2smarts[angletype3]
+          comb = s1 + "_" + s2 + "_" + s3
+          if comb in smartsCFangleDict:
+            f.write("angcflux %s %s %s %s\n"%(angletype1, angletype2, angletype3, smartsCFangleDict[comb]))
+            print(GREEN + "CFlux parameters found for angle %s-%s-%s"%(angletype1, angletype2, angletype3) + ENDC)
           else:
-            print(RED + "CFlux parameters NOT found for angle %s-%s-%s"%(dd[1], dd[2], dd[3]) + ENDC)
+            print(RED + "CFlux parameters NOT found for angle %s-%s-%s"%(angletype1, angletype2, angletype3) + ENDC)
   return
  
 def main():
