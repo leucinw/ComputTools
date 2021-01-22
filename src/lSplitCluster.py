@@ -8,7 +8,9 @@
 
 """split a tinker xyz dimer cluster file to its monomer xyzs"""
 
-import os, sys
+import os
+import sys
+import argparse
 
 def split(pool):
   mono1 = [pool[0]]
@@ -38,19 +40,26 @@ def main():
   global txyz
   global lines
   global prefix 
-  txyz = sys.argv[1]
-  prefix, _ = os.path.splitext(txyz) 
-  lines = open(txyz).readlines()
-  natom = len(lines)
-  pool = []
-  for i in range(1, natom, 1):
-    pool.append(i)
-  splitted = []
-  while pool != []:
-    r = split(pool)
-    mono1, pool = r[0], r[1]
-    splitted.append(mono1) 
-  writeMono(splitted)
+  parser = argparse.ArgumentParser()
+  parser.add_argument('-i', dest = 'inputs',  nargs='+', help = "Input files",    required=True)  
+  args = vars(parser.parse_args())
+  inps = args["inputs"]
+  for txyz in inps:
+    prefix, _ = os.path.splitext(txyz) 
+    lines = open(txyz).readlines()
+    natom = len(lines)
+    pool = []
+    for i in range(1, natom, 1):
+      pool.append(i)
+    splitted = []
+    while pool != []:
+      r = split(pool)
+      mono1, pool = r[0], r[1]
+      splitted.append(mono1) 
+    writeMono(splitted)
+  return
 
-if __name__ == "__main__":
+if len(sys.argv) == 1:
+  print('\033[93m' + " please use '-h' option to see usage" + '\033[0m')
+else:
   main()
