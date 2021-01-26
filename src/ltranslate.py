@@ -91,6 +91,7 @@ def main():
       f.write("%3s%10.5f%10.5f%10.5f\n"%(atom, coord[0], coord[1], coord[2]))
     for atom, coord in zip(atoms2, coord2):
       f.write("%3s%10.5f%10.5f%10.5f\n"%(atom, coord[0], coord[1], coord[2]))
+  print(f"DONE with {filename}!")
   return 
 
 if __name__ == "__main__":
