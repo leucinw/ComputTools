@@ -18,7 +18,7 @@ from datetime import datetime
 '''check the availability of ONE node'''
 def checkone(node):
   njobs = 0
-  exelist = ["psi4","g09","g16","dynamic", "dynamic.x","cp2k.ssmp","mpirun_qchem","orca_mp2_mpi","gmx_mpi","gmx"]
+  exelist = ["psi4","g09","g16","dynamic.x","cp2k.ssmp","mpirun_qchem","orca_mp2_mpi","gmx_mpi","gmx"]
   try:
     topstr = subprocess.check_output(f"ssh {node} 'top -n1 -b'", shell=True).decode("utf-8")
     line = ''.join(list(topstr))
@@ -30,6 +30,8 @@ def checkone(node):
 
 '''check the availability of ALL node'''
 def checkNodes(nodes):
+  now = datetime.now().strftime("%b %d %Y %H:%M:%S")
+  print('\033[91m' + "[" + now + "] " + "checking availability of renlab clusters..." + '\033[0m')
   nodejobs = []
   with concurrent.futures.ProcessPoolExecutor() as executor:
     results = [executor.submit(checkone, node) for node in nodes]
@@ -97,20 +99,32 @@ def main():
     for ex in xnodes:
       if (ex in nodes):
         nodes.remove(ex)
-  # submit jobs; virualize using progress bar
-  if len(qmfiles) > 0:
-    print('\033[92m' + "Nodes For You: %s"%(" ".join(nodes)) + '\033[0m')
-    pbar = tqdm(range(len(qmfiles)))
-    for jobidx in pbar:
+
+  print('\033[92mSatisfied Nodes LIST:\033[0m')
+  for node in nodes:
+    print("%8s"%node)
+  # submit jobs
+  jobidx = 0
+  if len(qmfiles) != 0:
+    while(jobidx != len(qmfiles)):
       results = checkNodes(nodes)
       idlenodes = []
       for r in results:
         if (r[1]==0):
           idlenodes.append(r[0])
-      while (idlenodes == []):
+      if (idlenodes == []):
         time.sleep(30.0)
-      subOneJob(idlenodes[0],qmfiles[jobidx])
-      pbar.set_description('\033[93m' + "PROGRESS" '\033[0m')
+      else:
+        for node in idlenodes:
+          if (jobidx == len(qmfiles)):
+            break
+          subOneJob(node, qmfiles[jobidx])
+          print("[%4s / %4s] "%(jobidx+1, len(qmfiles)) + '\033[92mSubmitted %s on %s!\033[0m'%(qmfiles[jobidx], node))
+          jobidx += 1
+        if (jobidx == len(qmfiles)):
+          break
+        else:
+          time.sleep(30.0)
   else:
     print('\033[91m' + "Outputs already exist for your inputs!!" + '\033[0m')
   return
