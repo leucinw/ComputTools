@@ -68,7 +68,8 @@ def main():
   con = args["converge"]
 
   def ToXYZ(fi,fo):
-    if ti == "XYZ":cmdstr = "babel -ixyz %s -oxyz %s"%(fi, fo)
+    if ti == "XYZ":
+      cmdstr = "babel -ixyz %s -oxyz %s"%(fi, fo)
     elif ti == "TXYZ":
       lines = open(fi).readlines()
       n = len(lines[0].split())
@@ -91,7 +92,8 @@ def main():
     return
 
   def ToTXYZ(fi,fo,at):
-    if ti == "XYZ":cmdstr = "babel -ixyz %s -otxyz %s"%(fi, "tmp.txyz")
+    if ti == "XYZ":
+      cmdstr = "babel -ixyz %s -otxyz %s"%(fi, "tmp.txyz")
     elif ti == "PSIOUT":
       psiout2xyz(fi, "tmp.x")
       cmdstr = "babel -ixyz %s -otxyz %s"%("tmp.x", "tmp.txyz")
@@ -102,14 +104,17 @@ def main():
     subprocess.run(cmdstr,shell=True)
     atomtypes = []
     # read atom types from txyz files
+    apfolder="/home/liuchw/apfolder/"
     if at != None:
       for a in at:
-        if not (a.endswith(".xyz") or a.endswith(".txyz")):
-          types = numpy.loadtxt(a, usecols=(0,), dtype="str", unpack=True)
-          atomtypes += list(types)
-        else: # tinker-xyz
-          types = numpy.loadtxt(a, usecols=(5,), dtype="str", unpack=True, skiprows=1)
-          atomtypes += list(types)
+        if os.path.isfile(a):
+          fname = os.path.join(os.getcwd(), a)
+        elif os.path.isfile(os.path.join(apfolder, "txyz", a)):
+          fname = os.path.join(apfolder, "txyz", a)
+        else:
+          sys.exit("Could not find atomtype files!")
+        types = numpy.loadtxt(fname, usecols=(5,), dtype="str", unpack=True, skiprows=1)
+        atomtypes += list(types)
     # read atom types and connections from txyz file
     atomtypes_connections = []
     if tp != None:
@@ -146,6 +151,7 @@ def main():
     else:
       cmdstr = ("echo 'File format %s not supported!'"%ti)
     subprocess.run(cmdstr,shell=True)
+    os.remove("tmp.x")
 
     fname, _ = os.path.splitext(fo)
     chk   = "%chk=" + fname + ".chk\n"
@@ -205,6 +211,7 @@ def main():
     else:
       cmdstr = ("echo 'File format %s not supported!'"%ti)
     subprocess.run(cmdstr,shell=True)
+    os.remove("tmp.x")
 
     basis   = " BASIS=%s\n"%bf
     jobtype = " JOB_TYPE=%s\n"%jt
@@ -242,62 +249,39 @@ def main():
         fout.write("units angstrom\nno_reorient\n")
         fout.write("symmetry c1\n}\n\n")
         fout.write("set {\nscf_type DF\n")
-        if qm == "MP2":
+
+        if (qm == "MP2") or (qm == "MP2D"):
           fout.write("mp2_type DF\ne_convergence 7\nreference rhf\n}\n\n")
           if jt.upper() == "CBS": 
             if not bsse:
               if bf.upper() == "CC-PVTZ":
-                fout.write("energy('mp2/cc-pv[tq]z')\n")
+                fout.write("energy('%s/cc-pv[tq]z')\n"%qm)
               elif bf.upper() == "AUG-CC-PVTZ":
-                fout.write("energy('mp2/aug-cc-pv[tq]z')\n")
+                fout.write("energy('%s/aug-cc-pv[tq]z')\n"%qm)
               else:
                 sys.exit("MP2 CBS with %s is not supported!"%bf.upper())
             else:
               if bf.upper() == "CC-PVTZ":
-                fout.write("energy('mp2/cc-pv[tq]z', bsse_type='%s')\n"%bsse)
+                fout.write("energy('%s/cc-pv[tq]z', bsse_type='%s')\n"%(qm,bsse))
               elif bf.upper() == "AUG-CC-PVTZ":
-                fout.write("energy('mp2/aug-cc-pv[tq]z', bsse_type='%s')\n"%bsse)
+                fout.write("energy('%s/aug-cc-pv[tq]z', bsse_type='%s')\n"%(qm,bsse))
               else:
                 sys.exit("MP2 CBS BSSE with %s is not supported!"%bf.upper())
           elif jt.upper() == "SP":
             if not bsse:
-              fout.write("energy('mp2/%s')\n"%bf)
+              fout.write("energy('%s/%s')\n"%(qm,bf))
             else:
-              fout.write("energy('mp2/%s', bsse_type='%s')\n"%(bf,bsse))
+              fout.write("energy('%s/%s', bsse_type='%s')\n"%(qm,bf,bsse))
           elif jt.upper() == "OPT":
-            fout.write("set opt_coordinates cartesian\n")
-            fout.write("set g_convergence GAU\n")
+            fout.write("set OPT_COORDINATES CARTESIAN\n")
+            fout.write("set G_CONVERGENCE GAU\n")
             fout.write("set GEOM_MAXITER 400\n")
-            fout.write("optimize('mp2/%s')\n"%bf)
+            fout.write("set DYNAMIC_LEVEL 2\n")
+            fout.write("optimize('%s/%s')\n"%(qm,bf))
             fout.write("\n")
           else:
             sys.exit("MP2 with %s is not supported!"%jt.upper())
-        elif qm == "MP2D":
-          fout.write("mp2_type DF\ne_convergence 7\nreference rhf\n}\n\n")
-          if jt.upper() == "CBS": 
-            if not bsse:
-              if bf.upper() == "CC-PVTZ":
-                fout.write("energy('mp2d/cc-pv[tq]z')\n")
-              elif bf.upper() == "AUG-CC-PVTZ":
-                fout.write("energy('mp2d/aug-cc-pv[tq]z')\n")
-              else:
-                sys.exit("MP2D CBS with %s is not supported!"%bf.upper())
-            else:
-              if bf.upper() == "CC-PVTZ":
-                fout.write("energy('mp2d/cc-pv[tq]z', bsse_type='%s')\n"%bsse)
-              elif bf.upper() == "AUG-CC-PVTZ":
-                fout.write("energy('mp2d/aug-cc-pv[tq]z', bsse_type='%s')\n"%bsse)
-              else:
-                sys.exit("MP2D CBS BSSE with %s is not supported!"%bf.upper())
-          elif jt.upper() == "SP":
-            if not bsse:
-              fout.write("energy('mp2d/%s')\n"%bf)
-            else:
-              fout.write("energy('mp2d/%s', bsse_type='%s')\n"%(bf,bsse))
-          elif jt.upper() == "OPT":
-            fout.write("optimize('mp2d/%s')\n"%bf)
-          else:
-            sys.exit("MP2D with %s is not supported!"%jt.upper())
+
         elif qm == "CCSD(T)":
           fout.write("mp2_type DF\ne_convergence 7\nreference rhf\n}\n\n")
           if jt.upper() == "CBS":
@@ -328,8 +312,6 @@ def main():
           fout.write("properties('PBE0/%s', properties=['dipole'], title='Acetate')\n"%bf)
       return
 
-    rmstr = "rm -rf tmp.xyz"
-    subprocess.run(rmstr, shell=True)
     if ti == "XYZ":
       cmdstr = "cp %s tmp.xyz"%fi
     elif ti == "PSIOUT":
@@ -343,16 +325,19 @@ def main():
 
     if os.path.isfile("tmp.xyz"):
       XYZ2PSI4("tmp.xyz", fo)
+      os.remove("tmp.xyz")
     return
     
   def psiout2xyz(fin, fout):
     lines = open(fin).readlines()
     for n in range(len(lines)):
-      if "Final optimized geometry " in lines[n]:break
+      if "Final optimized geometry " in lines[n]:
+        break
     atoms = []
     coords = []
     for n in range(n+6, len(lines)):
-      if lines[n] == "\n":break
+      if lines[n] == "\n":
+        break
       dd = lines[n].split()
       atoms.append(dd[0])
       coords.append(dd[1:4])
