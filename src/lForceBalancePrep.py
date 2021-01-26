@@ -18,6 +18,7 @@ energies,weights = np.loadtxt(inputfile, usecols=(1,2), dtype="float", unpack=Tr
 
 alphabet = string.ascii_lowercase
 ndimer = len(dimerxyzs)
+shortNameList = []
 if (3*ndimer <= 26):
   shortNameList = list(alphabet)
 elif (26 < 3*ndimer <= 26*26):
