@@ -246,10 +246,16 @@ def assignBonded(fname, tinkerkey):
   class1, class2, class3  = np.loadtxt(os.path.join(prmdir, "angle.prm"), usecols=(1, 2, 3), unpack=True, dtype="str",skiprows=1)
   angleKconstant  = np.loadtxt(os.path.join(prmdir, "angle.prm"), usecols=(4), unpack=True, dtype="float",skiprows=1)
   classes = []
-  '''store only one set of parameter since angle indices are interchangable''' 
+  angKconsts = []
+  '''store two sets of parameters since angle indices are interchangable''' 
   for c1, c2, c3 in zip(class1, class2, class3):
     classes.append(c1 + "_" + c2 + "_" + c3)
-  classAngleKconstantDict = dict(zip(classes, angleKconstant))
+    classes.append(c3 + "_" + c2 + "_" + c1)
+  for k in angleKconstant:
+    angKconsts.append(k)
+    angKconsts.append(k)
+
+  classAngleKconstantDict = dict(zip(classes, angKconsts))
   
   with open(tinkerkey, "a") as f:
     for line in lines:
@@ -262,18 +268,12 @@ def assignBonded(fname, tinkerkey):
           c1 = type2class[angletype1]
           c2 = type2class[angletype2]
           c3 = type2class[angletype3]
-          comb1 = c1 + "_" + c2 + "_" + c3
-          comb2 = c3 + "_" + c2 + "_" + c1
-          if (comb1 in classAngleKconstantDict) and (comb2 not in classAngleKconstantDict):
-            f.write("angle %s %s %s %s %s\n"%(angletype1, angletype2, angletype3, classAngleKconstantDict[comb1], dd[4]))
+          comb = c1 + "_" + c2 + "_" + c3
+          if (comb in classAngleKconstantDict): 
+            f.write("angle %s %s %s %s %s\n"%(angletype1, angletype2, angletype3, classAngleKconstantDict[comb], dd[5]))
             print(GREEN + "ANGLE bending parameter found for angle %s-%s-%s"%(angletype1, angletype2, angletype3) + ENDC)
-          if (comb1 not in classAngleKconstantDict) and (comb2 in classAngleKconstantDict):
-            f.write("angle %s %s %s %s %s\n"%(angletype3, angletype2, angletype1, classAngleKconstantDict[comb2], dd[4]))
-            print(GREEN + "ANGLE bending parameter found for angle %s-%s-%s"%(angletype3, angletype2, angletype1) + ENDC)
-          if (comb1 in classAngleKconstantDict) and (comb2 in classAngleKconstantDict) and (angletype1 != angletype3):
-            print(RED + "There exist two sets of parameters for angle %s-%s-%s with atom class %s"%(angletype1, angletype2, angletype3, comb1) + ENDC)
-          if (comb1 not in classAngleKconstantDict) and (comb2 not in classAngleKconstantDict):
-            print(RED + "ANGLE bending parameter NOT found for angle %s-%s-%s with atom class %s"%(angletype1, angletype2, angletype3, comb1) + ENDC)
+          else: 
+            print(RED + "ANGLE bending parameter NOT found for angle %s-%s-%s with atom class %s"%(angletype1, angletype2, angletype3, comb) + ENDC)
 
   #bond-angle coupling (strbnd term)
   class1, class2, class3  = np.loadtxt(os.path.join(prmdir, "strbend.prm"), usecols=(1, 2, 3), unpack=True, dtype="str",skiprows=1)
