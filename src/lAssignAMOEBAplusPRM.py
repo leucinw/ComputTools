@@ -291,7 +291,9 @@ def assignBonded(fname, tinkerkey):
   
   with open(tinkerkey, "a") as f:
     for line in lines:
-      if "strbnd " in line:
+      #if "strbnd " in line:
+      # try to find strbnd parameters for every angle
+      if "angle " in line:
         dd = line.split()
         angletype1 = dd[1]
         angletype2 = dd[2]
