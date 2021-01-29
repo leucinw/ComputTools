@@ -14,7 +14,15 @@ import numpy as np
 
 inputfile = sys.argv[1]
 dimerxyzs = np.loadtxt(inputfile, usecols=(0), dtype="str", unpack=True, skiprows=1) 
-energies,weights = np.loadtxt(inputfile, usecols=(1,2), dtype="float", unpack=True, skiprows=1) 
+lines = open(inputfile).readlines()
+ncols = len(lines[2].split())
+if ncols == 4: 
+  exchg, disp, weights = np.loadtxt(inputfile, usecols=(1,2,3), dtype="float", unpack=True, skiprows=1) 
+  energies = exchg + disp
+elif ncols == 3:
+  energies,weights = np.loadtxt(inputfile, usecols=(1,2), dtype="float", unpack=True, skiprows=1)
+else:
+  print("Check your input file")
 
 alphabet = string.ascii_lowercase
 ndimer = len(dimerxyzs)
