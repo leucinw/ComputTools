@@ -19,7 +19,7 @@ def main():
   parser = argparse.ArgumentParser()
   parser.add_argument('-i',     dest = 'input', required=True, help="input filename")  
   parser.add_argument('-o',     dest = 'output', default=None, help="output filename. Optional")
-  parser.add_argument('-it',    dest = 'inType',  required=True, choices = ["xyz", "txyz", "g09", "qcout", "mol", "mol2", "sdf", "psiout"], help="input file type")
+  parser.add_argument('-it',    dest = 'inType',  required=True, choices = ["xyz", "txyz", "g09", "qcout", "mol", "mol2", "sdf", "psi4out"], help="input file type")
   parser.add_argument('-ot',    dest = 'outType', required=True, choices = ["xyz", "qcin", "psi4", "com", "txyz"], help="output file type")
   parser.add_argument('-q',     dest = 'QM', default="HF", type=str.upper, help="QM method")
   parser.add_argument('-b',     dest = 'basis',  default = "STO-3G", help="basis function for quantum job", type=str.lower)
@@ -81,7 +81,7 @@ def main():
         cmdstr = "babel -itxyz %s -oxyz %s"%("tmp.t", fo)
       else:
         cmdstr = "babel -itxyz %s -oxyz %s"%(fi, fo)
-    elif ti == "PSIOUT":
+    elif ti == "PSI4OUT":
       psiout2xyz(fi,fo)
       cmdstr = "echo 'write xyz file from psi4 log!'"
     elif (ti in ["G09", "QCOUT", "MOL", "MOL2", "SDF"]):
@@ -151,7 +151,6 @@ def main():
     else:
       cmdstr = ("echo 'File format %s not supported!'"%ti)
     subprocess.run(cmdstr,shell=True)
-    os.remove("tmp.x")
 
     fname, _ = os.path.splitext(fo)
     chk   = "%chk=" + fname + ".chk\n"
