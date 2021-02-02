@@ -12,7 +12,6 @@ import subprocess
 import argparse
 import numpy as np
 import concurrent.futures 
-from tqdm import tqdm
 from datetime import datetime
 
 '''check the availability of ONE node'''
@@ -43,15 +42,17 @@ def checkNodes(nodes):
 def prepare(flistin, scratch=300, memory=30, maxmem=999):
   flist = []
   nlist = []
+  nodes_maxjobs = {}
   nodes = np.loadtxt("/home/liuchw/shared/renlab.nodes", usecols=(0), unpack=True, dtype="str", skiprows=1) 
-  memorys, cpus, scratches = np.loadtxt("/home/liuchw/shared/renlab.nodes", usecols=(1,2,3), unpack=True, dtype="int", skiprows=1)
+  memorys, cpus, scratches, maxjobs = np.loadtxt("/home/liuchw/shared/renlab.nodes", usecols=(1,2,3,4), unpack=True, dtype="int", skiprows=1)
   for f in flistin:
     if not os.path.isfile(os.path.splitext(f)[0] + ".log"):
       flist.append(f)
   for n, s, m in zip(nodes, scratches, memorys):
     if (s > scratch) and (m > memory) and (m < maxmem):
       nlist.append(n)
-  return flist, nlist
+  nodes_maxjobs = dict(zip(nodes, maxjobs))
+  return flist, nlist, nodes_maxjobs
 
 '''submit ONE qm job to ONE node'''
 def subOneJob(node,qmfile):
@@ -71,7 +72,6 @@ def subOneJob(node,qmfile):
   subprocess.run(cmdstr,shell=True)
   return
 
-
 def main():
   parser = argparse.ArgumentParser()
   parser.add_argument('-i', dest = 'input',  nargs='+', help = "Input files",    required=True)  
@@ -80,6 +80,7 @@ def main():
   parser.add_argument('-d', dest = 'disk',   type =int, help = "Disk of requested nodes. Default: 200 (GB)",  default=200)  
   parser.add_argument('-m', dest = 'memory', type =int, help = "Memory lower bound. Default: 30 (GB)", default=30)  
   parser.add_argument('-M', dest = 'maxmem', type =int, help = "Memory upper bound. Default: 999 (GB)", default=999)  
+  parser.add_argument('-t', dest = 'tcheck',type=float, help = "Time interval to check node availability (in Second)", default=30.0)  
   args = vars(parser.parse_args())
   inps = args["input"]
   nodes = args["nodes"]
@@ -87,13 +88,14 @@ def main():
   disk = args["disk"]
   memory = args["memory"] 
   maxmem = args["maxmem"] 
+  tcheck = args["tcheck"] 
 
   # prepare flist, nlist
   if (nodes == []):
-    qmfiles, nodes = prepare(inps, disk, memory, maxmem)
+    qmfiles, nodes, nodes_maxjobs = prepare(inps, disk, memory, maxmem)
   # prepare flist only if nlist is specified
   else:
-    qmfiles, _ = prepare(inps, disk, memory, maxmem)
+    qmfiles, _, nodes_maxjobs = prepare(inps, disk, memory, maxmem)
   # remove the nodes user want to exclude
   if (xnodes != []):
     for ex in xnodes:
@@ -110,21 +112,22 @@ def main():
       results = checkNodes(nodes)
       idlenodes = []
       for r in results:
-        if (r[1]==0):
-          idlenodes.append(r[0])
+        number = nodes_maxjobs[r[0]] - r[1]
+        if number > 0:
+          idlenodes += [r[0]]*number
       if (idlenodes == []):
-        time.sleep(30.0)
+        time.sleep(tcheck)
       else:
         for node in idlenodes:
           if (jobidx == len(qmfiles)):
             break
           subOneJob(node, qmfiles[jobidx])
-          print("[%4s / %4s] "%(jobidx+1, len(qmfiles)) + '\033[92mSubmitted %s on %s!\033[0m'%(qmfiles[jobidx], node))
+          print("%4s/%s: "%(jobidx+1, len(qmfiles)) + '\033[92mSubmitted %s on %s!\033[0m'%(qmfiles[jobidx], node))
           jobidx += 1
         if (jobidx == len(qmfiles)):
           break
         else:
-          time.sleep(30.0)
+          time.sleep(tcheck)
   else:
     print('\033[91m' + "Outputs already exist for your inputs!!" + '\033[0m')
   return
