@@ -67,6 +67,10 @@ def subOneJob(node,qmfile):
     srcfile = "/home/liuchw/.bashrc.psi4"
     exestr = "nohup psi4 -n 8 -i %s.psi4 -o %s.log >log.sub 2>err.sub &"%(f, f)
     cmdstr = 'ssh %s "source %s; cd %s; %s" &' % (node, srcfile, cwd, exestr)
+  elif ext == ".QCHEM":
+    srcfile = "/home/liuchw/.bashrc.qchem"
+    exestr = "nohup qchem -nt 8 %s.qchem %s.log >log.sub 2>err.sub &"%(f, f)
+    cmdstr = 'ssh %s "source %s; cd %s; %s" &' % (node, srcfile, cwd, exestr)
   else:
     cmdstr = "echo 'file format %s not supported!'"%ext
   subprocess.run(cmdstr,shell=True)
@@ -74,7 +78,7 @@ def subOneJob(node,qmfile):
 
 def main():
   parser = argparse.ArgumentParser()
-  parser.add_argument('-i', dest = 'input',  nargs='+', help = "Input files",    required=True)  
+  parser.add_argument('-i', dest = 'input',  nargs='+', help = "Input files: with extension of .COM/.PSI4/.QCHEM", required=True)  
   parser.add_argument('-n', dest = 'nodes',  nargs='+', help = "Submit jobs on these nodes ONLY. Default: []",default=[])  
   parser.add_argument('-x', dest = 'xnodes', nargs='+', help = "Submit jobs NOT on these nodes. Default: []", default=[])  
   parser.add_argument('-d', dest = 'disk',   type =int, help = "Disk of requested nodes. Default: 200 (GB)",  default=200)  
