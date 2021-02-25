@@ -19,11 +19,12 @@ def checkone(node):
   njobs = 0
   exelist = ["psi4","g09","g16","dynamic.x","cp2k.ssmp","mpirun_qchem","orca_mp2_mpi","gmx_mpi","gmx"]
   try:
-    topstr = subprocess.check_output(f"ssh {node} 'top -n1 -b'", shell=True).decode("utf-8")
+    topstr = subprocess.check_output(f"ssh {node} 'top -n1 -b' 2>err", shell=True).decode("utf-8")
     line = ''.join(list(topstr))
     for exe in exelist:
       njobs += line.count(exe)
   except:
+    njobs = 999
     pass
   return node,njobs
 
