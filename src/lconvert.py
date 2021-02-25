@@ -24,11 +24,11 @@ def main():
   parser.add_argument('-q',     dest = 'QM', default="HF", type=str.upper, help="QM method")
   parser.add_argument('-b',     dest = 'basis',  default = "STO-3G", help="basis function for quantum job", type=str.lower)
   parser.add_argument('-c',     dest = 'charge', default = "0", help="total charge of the whole system", type=str.lower)
-  parser.add_argument('-c1',    dest = 'charge1', default = None, help="total charge of the first molecule")
-  parser.add_argument('-c2',    dest = 'charge2', default = None, help="total charge of the second molecule")
+  parser.add_argument('-c1',    dest = 'charge1', default = "0", help="total charge of the first molecule")
+  parser.add_argument('-c2',    dest = 'charge2', default = "0", help="total charge of the second molecule")
   parser.add_argument('-s',     dest = 'spin', default = "1", help="total spin of the whole system")
-  parser.add_argument('-s1',    dest = 'spin1', default = None, help="total spin of the first molecule")
-  parser.add_argument('-s2',    dest = 'spin2', default = None, help="total spin of the second molecule")
+  parser.add_argument('-s1',    dest = 'spin1', default = "1", help="total spin of the first molecule")
+  parser.add_argument('-s2',    dest = 'spin2', default = "1", help="total spin of the second molecule")
   parser.add_argument('-n1',    dest = 'number1', default = None, help="number of atoms of the first molecule")
   parser.add_argument('-bsse',  dest = 'bsse', default = None, help = "use bsse correction, e.g. CP")
   parser.add_argument('-j',     dest = 'jobType', default="sp", type=str.lower, help="job type, can be opt, sp, freq, cbs, sapt, opt+freq, dipole, esp. Default: sp")
@@ -94,7 +94,7 @@ def main():
   def ToTXYZ(fi,fo,at):
     if ti == "XYZ":
       cmdstr = "babel -ixyz %s -otxyz %s"%(fi, "tmp.txyz")
-    elif ti == "PSIOUT":
+    elif ti == "PSI4OUT":
       psiout2xyz(fi, "tmp.x")
       cmdstr = "babel -ixyz %s -otxyz %s"%("tmp.x", "tmp.txyz")
     elif (ti in ["TXYZ", "G09", "QCOUT", "MOL", "MOL2", "SDF"]):
@@ -143,7 +143,7 @@ def main():
   def ToCOM(fi,fo):
     if ti == "XYZ":
       cmdstr = "babel -ixyz %s -ogau %s"%(fi, fo)
-    elif ti == "PSIOUT":
+    elif ti == "PSI4OUT":
       psiout2xyz(fi, 'tmp.x')
       cmdstr = "babel -ixyz %s -ogau %s"%("tmp.x", fo)
     elif (ti in ["TXYZ", "COM", "G09", "QCOUT", "MOL", "MOL2", "SDF"]):
@@ -202,7 +202,7 @@ def main():
   def ToQCHEM(fi,fo):
     if ti == "XYZ":
       cmdstr = "babel -ixyz %s -oqcin %s"%(fi, fo)
-    elif ti == "PSIOUT":
+    elif ti == "PSI4OUT":
       psiout2xyz(fi, "tmp.x")
       cmdstr = "babel -ixyz %s -oqcin %s"%("tmp.x", fo)
     elif (ti in ["TXYZ", "COM", "G09", "QCOUT", "MOL", "MOL2", "SDF"]):
@@ -247,9 +247,22 @@ def main():
             fout.write("%3s   %12.6f%12.6f%12.6f\n"%(atoms[n],float(coords[0][n]),float(coords[1][n]),float(coords[2][n])))
         fout.write("units angstrom\nno_reorient\n")
         fout.write("symmetry c1\n}\n\n")
-        fout.write("set {\nscf_type DF\n")
 
-        if (qm == "MP2") or (qm == "MP2D"):
+        if (qm == "HF"):
+          if jt.upper() == "OPT":
+            fout.write("set OPT_COORDINATES CARTESIAN\n")
+            fout.write("set G_CONVERGENCE GAU\n")
+            fout.write("set GEOM_MAXITER 400\n")
+            fout.write("set DYNAMIC_LEVEL 2\n")
+            fout.write("optimize('%s/%s')\n"%(qm,bf))
+            fout.write("\n")
+          elif jt.upper() == "SAPT":
+            pass
+          else:
+            sys.exit("HF with %s is not supported!"%jt.upper())
+
+        elif (qm == "MP2") or (qm == "MP2D"):
+          fout.write("set {\nscf_type DF\n")
           fout.write("mp2_type DF\ne_convergence 7\nreference rhf\n}\n\n")
           if jt.upper() == "CBS": 
             if not bsse:
@@ -282,6 +295,7 @@ def main():
             sys.exit("MP2 with %s is not supported!"%jt.upper())
 
         elif qm == "CCSD(T)":
+          fout.write("set {\nscf_type DF\n")
           fout.write("mp2_type DF\ne_convergence 7\nreference rhf\n}\n\n")
           if jt.upper() == "CBS":
             if not bsse:
@@ -302,6 +316,8 @@ def main():
               fout.write("energy('%s/%s', bsse_type='%s')\n"%(qm,bf, bsse))
 
         if jt.upper() == "SAPT":
+          fout.write("set {\nscf_type DF\n")
+          fout.write("e_convergence 7\nreference rhf\n")
           fout.write("basis %s\n"%bf)
           fout.write("freeze_core True\n")
           fout.write("guess SAD\n}\n")
@@ -313,7 +329,7 @@ def main():
 
     if ti == "XYZ":
       cmdstr = "cp %s tmp.xyz"%fi
-    elif ti == "PSIOUT":
+    elif ti == "PSI4OUT":
       psiout2xyz(fi, "tmp.xyz")
       cmdstr = "echo 'write xyz file from psi4 log!'"
     elif (ti in ["TXYZ", "COM", "G09", "QCOUT", "MOL", "MOL2", "SDF"]):
