@@ -106,6 +106,12 @@ def main():
     for ex in xnodes:
       if (ex in nodes):
         nodes.remove(ex)
+  # remove the nodes that have been commented out
+  nodes_ = []
+  for n in nodes:
+    if "#" not in n:
+      nodes_.append(n)
+  nodes = nodes_ 
 
   print('\033[92mSatisfied Nodes LIST:\033[0m')
   for node in nodes:
