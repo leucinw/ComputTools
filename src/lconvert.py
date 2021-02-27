@@ -46,7 +46,6 @@ def main():
   to = args["outType"].upper()
   if (fo == None):
     fo = os.path.splitext(fi)[0] + "." + to.lower()
-    print(fo)
   cg = args["charge"]
   qm = args["QM"].upper()
   if qm == "CCSD_T":
@@ -256,6 +255,7 @@ def main():
             fout.write("set DYNAMIC_LEVEL 2\n")
             fout.write("optimize('%s/%s')\n"%(qm,bf))
             fout.write("\n")
+            print(f"{fo} file generated!")
           elif jt.upper() == "SAPT":
             pass
           else:
@@ -268,22 +268,28 @@ def main():
             if not bsse:
               if bf.upper() == "CC-PVTZ":
                 fout.write("energy('%s/cc-pv[tq]z')\n"%qm)
+                print(f"{fo} file generated!")
               elif bf.upper() == "AUG-CC-PVTZ":
                 fout.write("energy('%s/aug-cc-pv[tq]z')\n"%qm)
+                print(f"{fo} file generated!")
               else:
                 sys.exit("MP2 CBS with %s is not supported!"%bf.upper())
             else:
               if bf.upper() == "CC-PVTZ":
                 fout.write("energy('%s/cc-pv[tq]z', bsse_type='%s')\n"%(qm,bsse))
+                print(f"{fo} file generated!")
               elif bf.upper() == "AUG-CC-PVTZ":
                 fout.write("energy('%s/aug-cc-pv[tq]z', bsse_type='%s')\n"%(qm,bsse))
+                print(f"{fo} file generated!")
               else:
                 sys.exit("MP2 CBS BSSE with %s is not supported!"%bf.upper())
           elif jt.upper() == "SP":
             if not bsse:
               fout.write("energy('%s/%s')\n"%(qm,bf))
+              print(f"{fo} file generated!")
             else:
               fout.write("energy('%s/%s', bsse_type='%s')\n"%(qm,bf,bsse))
+              print(f"{fo} file generated!")
           elif jt.upper() == "OPT":
             fout.write("set OPT_COORDINATES CARTESIAN\n")
             fout.write("set G_CONVERGENCE GAU\n")
@@ -291,6 +297,7 @@ def main():
             fout.write("set DYNAMIC_LEVEL 2\n")
             fout.write("optimize('%s/%s')\n"%(qm,bf))
             fout.write("\n")
+            print(f"{fo} file generated!")
           else:
             sys.exit("MP2 with %s is not supported!"%jt.upper())
 
@@ -300,20 +307,26 @@ def main():
           if jt.upper() == "CBS":
             if not bsse:
               fout.write("energy(cbs, corl_wfn='mp2', corl_basis='aug-cc-pv[tq]z', delta_wfn='ccsd(t)', delta_basis='aug-cc-pv[dt]z')\n")
+              print(f"{fo} file generated!")
             else:
               fout.write("energy(cbs, corl_wfn='mp2', corl_basis='aug-cc-pv[tq]z', delta_wfn='ccsd(t)', delta_basis='aug-cc-pv[dt]z', bsse_type='%s')\n"%bsse)
+              print(f"{fo} file generated!")
           if jt.upper() == "SP":
             if not bsse:
               fout.write("energy('ccsd(t)/%s')\n"%bf)
+              print(f"{fo} file generated!")
             else:
               fout.write("energy('ccsd(t)/%s', bsse_type='%s')\n"%(bf, bsse))
+              print(f"{fo} file generated!")
         else: 
           fout.write("e_convergence 7\nreference rhf\n\n\n")
           if jt.upper() == "SP":
             if not bsse:
               fout.write("energy('%s/%s')\n"%(qm,bf))
+              print(f"{fo} file generated!")
             else:
               fout.write("energy('%s/%s', bsse_type='%s')\n"%(qm,bf, bsse))
+              print(f"{fo} file generated!")
 
         if jt.upper() == "SAPT":
           fout.write("set {\nscf_type DF\n")
@@ -322,9 +335,11 @@ def main():
           fout.write("freeze_core True\n")
           fout.write("guess SAD\n}\n")
           fout.write("energy('sapt2+')\n")
+          print(f"{fo} file generated!")
         if jt.upper() == "DIPOLE":
           fout.write('set PROPERTIES_ORIGIN ["COM"]\n')
           fout.write("properties('PBE0/%s', properties=['dipole'], title='Acetate')\n"%bf)
+          print(f"{fo} file generated!")
       return
 
     if ti == "XYZ":
