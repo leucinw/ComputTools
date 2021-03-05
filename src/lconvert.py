@@ -111,7 +111,7 @@ def main():
         elif os.path.isfile(os.path.join(apfolder, "txyz", a)):
           fname = os.path.join(apfolder, "txyz", a)
         else:
-          sys.exit("Could not find atomtype files!")
+          sys.exit(RED + "Could not find atomtype files!"+ ENDC)
         types = numpy.loadtxt(fname, usecols=(5,), dtype="str", unpack=True, skiprows=1)
         atomtypes += list(types)
     # read atom types and connections from txyz file
@@ -259,7 +259,7 @@ def main():
           elif jt.upper() == "SAPT":
             pass
           else:
-            sys.exit("HF with %s is not supported!"%jt.upper())
+            sys.exit(RED + "HF with %s is not supported!"%jt.upper() + ENDC)
 
         elif (qm == "MP2") or (qm == "MP2D"):
           fout.write("set {\nscf_type DF\n")
@@ -273,7 +273,7 @@ def main():
                 fout.write("energy('%s/aug-cc-pv[tq]z')\n"%qm)
                 print(f"{fo} file generated!")
               else:
-                sys.exit("MP2 CBS with %s is not supported!"%bf.upper())
+                sys.exit(RED + "MP2 CBS with %s is not supported!"%bf.upper() + ENDC)
             else:
               if bf.upper() == "CC-PVTZ":
                 fout.write("energy('%s/cc-pv[tq]z', bsse_type='%s')\n"%(qm,bsse))
@@ -282,7 +282,7 @@ def main():
                 fout.write("energy('%s/aug-cc-pv[tq]z', bsse_type='%s')\n"%(qm,bsse))
                 print(f"{fo} file generated!")
               else:
-                sys.exit("MP2 CBS BSSE with %s is not supported!"%bf.upper())
+                sys.exit(RED + "MP2 CBS BSSE with %s is not supported!"%bf.upper() + ENDC)
           elif jt.upper() == "SP":
             if not bsse:
               fout.write("energy('%s/%s')\n"%(qm,bf))
@@ -299,7 +299,7 @@ def main():
             fout.write("\n")
             print(f"{fo} file generated!")
           else:
-            sys.exit("MP2 with %s is not supported!"%jt.upper())
+            sys.exit(RED + "MP2 with %s is not supported!"%jt.upper() + ENDC)
 
         elif qm == "CCSD(T)":
           fout.write("set {\nscf_type DF\n")
