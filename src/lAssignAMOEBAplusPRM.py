@@ -161,6 +161,7 @@ def assignCFlux(fname, tinkerkey):
             print(GREEN + "CFlux parameter assigned for bond %s-%s"%(dd[1], dd[2]) + ENDC)
           else:
             print(RED + "CFlux parameter NOT found for bond %s-%s"%(dd[1], dd[2]) + ENDC)
+            f.write("bndcflux %s %s %10.5f\n"%(dd[1], dd[2], 0.0))
 
   #cflux-a
   '''angle cflux in parameter file is in the right order for jt1,jt2,jb1,jb2'''
@@ -207,6 +208,7 @@ def assignCFlux(fname, tinkerkey):
             print(GREEN + "CFlux parameters found for angle %s-%s-%s"%(angletype1, angletype2, angletype3) + ENDC)
           else:
             print(RED + "CFlux parameters NOT found for angle %s-%s-%s"%(angletype1, angletype2, angletype3) + ENDC)
+            f.write("angcflux %s %s %s %s\n"%(angletype1, angletype2, angletype3, ' 0.0 0.0 0.0 0.0 '))
   return
 
 def assignBonded(fname, tinkerkey):
