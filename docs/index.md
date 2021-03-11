@@ -12,6 +12,7 @@
   * [x] lAssignAMOEBAplusPRM.py: assign amoebaplus parameters from database 
   * [x] latomtyper.py: assign new atom types for the input xyz and prm (or key) files 
   * [x] lboxbuilder.py: build a liquid box for tinker MD simulation
+  * [x] lbuildcovalent.py: connect two fragments covalently 
   * [x] lclusterbuilder.py: build molecular clusters of different size 
   * [x] lcalculator.py: a simple calculator for min, std, RMSE etc
   * [x] lconvert.py: convert a variety formats of chemical files from one to another
