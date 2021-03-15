@@ -10,7 +10,8 @@
 import argparse
 import numpy as np
 import os
-from scipy.optimize import minimize 
+from scipy.optimize import minimize
+from scipy.optimize import least_squares
 
 ''' connect two fragments together through covalent bond, initially used to generate Modified RNA structures'''
 
@@ -37,53 +38,67 @@ def rotMatrix(axis, theta):
                      [2.0*(bd+ac), 2.0*(cd-ab), aa+dd-bb-cc]])
   return rotmat
 
-def optimize(atoms1, atoms2, coords1, coords2, p1, p2, dist, dimer):
+def optimize(atoms1, atoms2, coords1, coords2, indx1, indx2, dist, ref2, dimer):
   '''cost function of distance summation'''
   def costfunc(params):
-    func = 0.0
-    axis = np.array(params[:3])
-    theta = params[3] 
+    coord_opt = np.array(params[:3])
+    axis = np.array(params[3:6])
+    theta = params[6] 
     rotmat = rotMatrix(axis, theta)
-    coords2_r = []
+    coords2_t = []
+    transvec = coord_opt - coords2[indx2]
     for n in range(len(coords2)):
-      coord2_r = np.dot(rotmat, coords2[n]) 
+      coord2_t = coord_opt + transvec 
+      coords2_t.append(coord2_t)
+    coords2_t = np.array(coords2_t)
+    coords2_r = []
+    for n in range(len(coords2_t)):
+      coord2_r = np.dot(rotmat, coords2_t[n]) 
       coords2_r.append(coord2_r)
     coords2_r = np.array(coords2_r)
-    distsum = 0.0
+    distsum = [] 
     for i in range(len(coords1)):
       for j in range(len(coords2_r)):
-        if (i!=p1) and (j!=p2):
-          distsum += (distance(coords1[i], coords2_r[j]))
-    distp1p2 = distance(coords1[p1], coords2_r[p2])
-    func = -(distp1p2)**2 + distsum
+        #if i!=indx1 and j!=indx2:
+        if j==ref2:
+          d = distance(coords1[i], coords2_r[j])
+          distsum.append(1000.0/d)
+    func = [np.square(coord_opt).sum(),  -dist**2] + distsum
     return func
 
   ''' do the optimization to find the best parameters'''
-  x0 = np.array([0.5, 0.5, 0.5, 0.5])
-  ret = minimize(costfunc, x0, method='SLSQP', bounds=([-1., 1.],[-1., 1.],[-1., 1.],[0, 6.28319]),options={'disp': True, 'eps': 1.e-4, 'maxiter': 1000, 'ftol': 1e-4})
+  x0 = np.ones(7) 
+  ret = least_squares(costfunc, x0, verbose=2, diff_step=1e-5, ftol=1e-5, gtol=1e-5, xtol=1e-5)
   np.savetxt("p0.txt", ret.x,fmt='%15.10f')
    
   # optimized parameters 
-  axis = np.array(ret.x[:3])
-  theta = ret.x[3] 
+  coord_opt = np.array(ret.x[:3])
+  axis = np.array(ret.x[3:6])
+  theta = ret.x[6] 
   
-  # get the rotated coordinate
-  rotmat = rotMatrix(axis, theta)
-  coords2_r = []
+  transvec = (coord_opt) - coords2[indx2]
+  coords2_t = []
   for n in range(len(coords2)):
-    coord2_r = np.dot(rotmat, coords2[n]) 
+    coord2_t = coords2[n] + transvec
+    coords2_t.append(coord2_t)
+  coords2_t = np.array(coords2_t)
+  rotmat = rotMatrix(axis, theta)
+
+  coords2_r = []
+  for n in range(len(coords2_t)):
+    coord2_r = np.dot(rotmat, coords2_t[n]) 
     coords2_r.append(coord2_r)
   coords2_r = np.array(coords2_r)
 
-  # get the rotated then translated coordinate
-  tempvec = coords2_r[p2] - coords1[p1]
+  #transvec = dist*(coords2_r[indx2])/np.linalg.norm(coords2_r[indx2]) -coords2_r[indx2]
+  tempvec = coords2_r[indx2] - coords1[indx1]
   transvec = dist*(tempvec)/np.linalg.norm(tempvec)-tempvec
   coords2_rt = []
   for n in range(len(coords2_r)):
     coord2_r = coords2_r[n] + transvec
     coords2_rt.append(coord2_r)
-  coords2_rt = np.array(coords2_rt) 
- 
+  coords2_rt = np.array(coords2_rt)
+
   # write the result
   with open(dimer, "w") as f:
     f.write("%s\n" %(len(atoms1) + len(atoms2)))
@@ -100,20 +115,19 @@ def main():
   parser.add_argument('-frag2', dest = 'fragment2', required=True, help="The second fragment in xyz format")
   parser.add_argument('-indx1', dest = 'atomindex1', required=True, help="The atom index of the first fragment", type=int)  
   parser.add_argument('-indx2', dest = 'atomindex2', required=True, help="The atom index of the second fragment", type=int)
+  parser.add_argument('-dimer', dest = 'dimername', required=True, help="The filename of to-be-generated molecule")  
+  parser.add_argument('-ref2', dest = 'refatom2', required=True, help="The atom index of the second fragment", type=int)
   args = vars(parser.parse_args())
-
   frag1 = args["fragment1"]
   frag2 = args["fragment2"]
   indx1 = args["atomindex1"] - 1
   indx2 = args["atomindex2"] - 1
-  
+  ref2 = args["refatom2"] - 1
+  dimer = args["dimername"]
   atoms1, coords1 = readXYZ(frag1)
   atoms2, coords2 = readXYZ(frag2)
-  a1 = atoms1[indx1]
-  a2 = atoms2[indx2]
-  dist = 1.5 
-  dimer = frag1[:-4] + "-" + frag2[:-4] + ".xyz"
-  optimize(atoms1, atoms2, coords1, coords2, indx1, indx2, dist, dimer)
+  dist = 1.2 
+  optimize(atoms1, atoms2, coords1, coords2, indx1, indx2, dist, ref2, dimer)
   return
 
 if __name__ == "__main__":
