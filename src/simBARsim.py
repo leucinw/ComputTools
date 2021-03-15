@@ -134,6 +134,11 @@ def main():
   for action in sys.argv[1:]:
     if action in actions:
       actions[action]()
+    else:
+      sys.exit("Usage: python simBARsim.py setup/dynamic/bar/result")
 
-if __name__ == '__main__':
+if len(sys.argv) == 1:
+  sys.exit("Usage: python simBARsim.py setup/dynamic/bar/result")
+else:
   main()
+
