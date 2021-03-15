@@ -19,7 +19,7 @@ def main():
   parser = argparse.ArgumentParser()
   parser.add_argument('-i',     dest = 'input', required=True, help="input filename")  
   parser.add_argument('-o',     dest = 'output', default=None, help="output filename. Optional")
-  parser.add_argument('-it',    dest = 'inType', required=True, choices = ["xyz", "txyz", "g09", "qcout", "mol", "mol2", "sdf", "psi4out"], help="input file type")
+  parser.add_argument('-it',    dest = 'inType', required=True, choices = ["xyz", "txyz", "g09", "qcout", "mol", "mol2", "sdf", "pdb", "psi4out"], help="input file type")
   parser.add_argument('-ot',    dest = 'outType', required=True, choices = ["xyz", "qcin", "psi4", "com", "txyz"], help="output file type")
   parser.add_argument('-q',     dest = 'QM', default="HF", type=str.upper, help="QM method")
   parser.add_argument('-b',     dest = 'basis',  default = "STO-3G", help="basis function for quantum job", type=str.lower)
@@ -71,7 +71,7 @@ def main():
   con = args["converge"]
 
   def ToXYZ(fi,fo):
-    if (ti in ["XYZ", "G09", "QCOUT", "MOL", "MOL2", "SDF"]):
+    if (ti in ["XYZ", "G09", "QCOUT", "MOL", "MOL2", "PDB", "SDF"]):
       cmdstr = "babel -i%s %s -oxyz %s"%(ti.lower(), fi, fo)
     elif ti == "TXYZ":
       txyz2xyz(fi,fo)
@@ -84,7 +84,7 @@ def main():
 
   def ToTXYZ(fi,fo,at):
     # generate a temptxyz file with MM2 atom types
-    if (ti in ["XYZ", "G09", "QCOUT", "MOL", "MOL2", "SDF"]):
+    if (ti in ["XYZ", "G09", "QCOUT", "MOL", "MOL2", "PDB", "SDF"]):
       cmdstr = "babel -i%s %s -otxyz %s"%(ti.lower(), fi, ftxyz)
     elif ti == "TXYZ":
       cmdstr = ("cp %s %s"%(fi, ftxyz))
@@ -134,7 +134,7 @@ def main():
 
   def ToCOM(fi,fo):
     # generate a generic com file
-    if (ti in ["XYZ", "COM", "G09", "QCOUT", "MOL", "MOL2", "SDF"]):
+    if (ti in ["XYZ", "COM", "G09", "QCOUT", "MOL", "MOL2", "PDB", "SDF"]):
       cmdstr = "babel -i%s %s -ogau %s"%(ti.lower(), fi, fo)
     elif ti == "TXYZ":
       txyz2xyz(fi,fxyz)
@@ -195,7 +195,7 @@ def main():
 
   def ToQCHEM(fi,fo):
     # generate a generic qchem file
-    if (ti in ["XYZ", "COM", "G09", "QCOUT", "MOL", "MOL2", "SDF"]):
+    if (ti in ["XYZ", "COM", "G09", "QCOUT", "MOL", "MOL2", "PDB", "SDF"]):
       cmdstr = "babel -i%s %s -oqcin %s"%(ti.lower(), fi, fo)
     elif ti == "PSI4OUT":
       psiout2xyz(fi, fxyz)
@@ -342,7 +342,7 @@ def main():
       cmdstr = "cp %s %s"%(fi, fxyz)
     elif ti == "PSI4OUT":
       psiout2xyz(fi, fxyz)
-    elif (ti in ["COM", "G09", "QCOUT", "MOL", "MOL2", "SDF"]):
+    elif (ti in ["COM", "G09", "QCOUT", "MOL", "MOL2", "PDB", "SDF"]):
       cmdstr = "babel -i%s %s -oxyz %s"%(ti.lower(), fi, fxyz)
     elif ti == "TXYZ":
       txyz2xyz(fi, fxyz)
