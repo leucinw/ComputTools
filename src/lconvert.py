@@ -19,7 +19,7 @@ def main():
   parser = argparse.ArgumentParser()
   parser.add_argument('-i',     dest = 'input', required=True, help="input filename")  
   parser.add_argument('-o',     dest = 'output', default=None, help="output filename. Optional")
-  parser.add_argument('-it',    dest = 'inType', required=True, choices = ["xyz", "txyz", "g09", "qcout", "mol", "mol2", "sdf", "pdb", "psi4out"], help="input file type")
+  parser.add_argument('-it',    dest = 'inType', required=True, choices = ["xyz", "txyz", "g09", "qcout", "mol", "mol2", "psi4", "sdf", "pdb", "psi4out"], help="input file type")
   parser.add_argument('-ot',    dest = 'outType', required=True, choices = ["xyz", "qcin", "psi4", "com", "txyz"], help="output file type")
   parser.add_argument('-q',     dest = 'QM', default="HF", type=str.upper, help="QM method")
   parser.add_argument('-b',     dest = 'basis',  default = "STO-3G", help="basis function for quantum job", type=str.lower)
@@ -44,7 +44,7 @@ def main():
   fo = args["output"]
   ti = args["inType"].upper()
   to = args["outType"].upper()
-  fin,_ = os.path.splitexit(fi)[0] 
+  fin = os.path.splitext(fi)[0]
   fxyz = fin + ".tmpxyz"
   if (fo == None):
     fo = fin + "." + to.lower()
@@ -77,6 +77,10 @@ def main():
       txyz2xyz(fi,fo)
     elif ti == "PSI4OUT":
       psiout2xyz(fi,fo)
+      cmdstr="echo"
+    elif ti == "PSI4":
+      psi42xyz(fi,fo)
+      cmdstr="echo"
     else:
       sys.exit(RED + f"File format {ti} not supported!"+ ENDC)
     subprocess.run(cmdstr,shell=True)
@@ -110,6 +114,7 @@ def main():
     # read atom types and connections from txyz file
     atomtypes_connections = []
     if tp != None:
+      atomtypes = []
       lines = open(tp).readlines()
       for line in lines[1:]:
         dd = line.split()
@@ -364,6 +369,25 @@ def main():
     coords = []
     for n in range(n+6, len(lines)):
       if lines[n] == "\n":
+        break
+      dd = lines[n].split()
+      atoms.append(dd[0])
+      coords.append(dd[1:4])
+    with open(fout, "w") as f:
+      f.write("%3s\nconverted from %s\n"%(len(atoms), finp))
+      for n in range(len(atoms)):
+        f.write("%3s%12.6f%12.6f%12.6f\n"%(atoms[n], float(coords[n][0]), float(coords[n][1]), float(coords[n][2])))
+    return
+
+  def psi42xyz(finp, fout):
+    lines = open(finp).readlines()
+    for n in range(len(lines)):
+      if "MOLECULE" in lines[n].upper():
+        break
+    atoms = []
+    coords = []
+    for n in range(n+2, len(lines)):
+      if "}" in lines[n]:
         break
       dd = lines[n].split()
       atoms.append(dd[0])
