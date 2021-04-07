@@ -9,9 +9,17 @@
 
 # Integrate BAR simulations in one script
 
-import os,sys
+import os
+import sys
+import time
 import numpy as np
 import subprocess
+
+# color
+RED = '\033[91m'
+GREEN = '\033[92m'
+YELLOW = '\33[93m'
+ENDC = '\033[0m'
 
 def sub(node, runfile, userpath=None):
   if userpath:
@@ -47,7 +55,10 @@ def main():
       orderparams.append(prm.split(","))
 
   if argDict["NODELIST"]=="read":
-    nodelist = [line.split("\n")[0] for line in open("nodelist").readlines()]
+    lines = open("nodelist").readlines()
+    for line in lines:
+      if "#" not in line[0]:
+        nodelist.append(line.split("\n")[0])
   else:
     for node in argDict["NODELIST"].split(","):
       nodelist.append(node)
@@ -66,7 +77,7 @@ def main():
       with open("temp.key","a") as temp:
         temp.write("ele-lambda %10.3f\n"%float(elb))
         temp.write("vdw-lambda %10.3f\n"%float(vlb))
-      copystr = "cp %s %s %s %s"%(argDict["TINKERXYZ"], argDict["TINKERPRM"], argDict["DYNAMICRUN"], dirname)
+      copystr = "cp %s %s %s"%(argDict["TINKERXYZ"], argDict["DYNAMICRUN"], dirname)
       subprocess.run(copystr, shell=True)
       subprocess.run("mv temp.key %s/%s"%(dirname, argDict["TINKERKEY"]), shell=True)
       if i < len(orderparams)-1:  
@@ -81,37 +92,81 @@ def main():
           for line in lines:
             temp.write(line)
         subprocess.run("mv temp.sh %s/%s"%(dirname, argDict["BARRUN"]),shell=True)
+    print(GREEN + "BAR simulation folders generated!" + ENDC)
     return
   
   def dynamic():
+    """submit the dynamic job of each window"""
     for i in range(len(orderparams)):
       tmp = orderparams[i]
       dirname = os.path.join(currDir, fname+"-%03d-%03d"%((int(float(tmp[0])*100)), (int(float(tmp[1])*100))))
       if os.path.isfile(os.path.join(dirname, argDict["TINKERXYZ"].replace(".xyz",".arc"))):
-        print(" .arc file exists in %s !"%dirname)
+        print(YELLOW + " .arc file exists in %s !"%dirname + ENDC)
       else:
         sub(nodelist[i], argDict["DYNAMICRUN"], dirname) 
-        print(" Submitted dynamic job on %s !"%nodelist[i])
+        print(GREEN + " Submitted dynamic job on %s !"%nodelist[i] + ENDC)
+
+    """check the completeness of dynamic job"""
+    while True: 
+      nfinish = 0
+      for i in range(len(orderparams)):
+        tmp = orderparams[i]
+        dirname = os.path.join(currDir, fname+"-%03d-%03d"%((int(float(tmp[0])*100)), (int(float(tmp[1])*100))))
+        f = 'liquid.log'
+        f = os.path.join(dirname,f)
+        if os.path.isfile(f):
+          tail = subprocess.check_output("tail -n10 %s"%f, shell=True).decode("utf-8")
+          line = ''.join(list(tail))
+          if "ns/day" in line:
+            nfinish += 1
+      if nfinish == len(orderparams):
+        print(GREEN + " All dynamic jobs have finished, cheers!" + ENDC)
+        break
+      else:
+        print(RED + " Waiting for some dynamic jobs to finish!" + ENDC)
+        time.sleep(30.0)
     return
   
   def bar():
+    """submit bar simulations after trajectories generated"""
     for i in range(len(orderparams)-1):
       tmp = orderparams[i]
       dirname = os.path.join(currDir, fname+"-%03d-%03d"% ((int(float(tmp[0])*100)), (int(float(tmp[1])*100))))
       if os.path.isfile(os.path.join(dirname, argDict["TINKERXYZ"].replace(".xyz", ".bar"))):
         print(" .bar file exists in %s !"%dirname)
-        subprocess.run("rm -f %s"%os.path.join(dirname, argDict["TINKERXYZ"].replace(".xyz",".bar")),shell=True)
+        subprocess.run("rm -f %s/freeEnergy.log %s"%(dirname,os.path.join(dirname, argDict["TINKERXYZ"].replace(".xyz",".bar"))),shell=True)
         sub(nodelist[i], argDict["BARRUN"], dirname)
-        print(" Deleted .bar file in %s and Resubmitted bar job on %s !"%(dirname, nodelist[i]))
+        print(YELLOW + " Deleted .bar file in %s and Resubmitted bar job on %s !"%(dirname, nodelist[i]) + ENDC)
       else:
         sub(nodelist[i], argDict["BARRUN"], dirname) 
-        print(" Submitted bar job on %s !"%nodelist[i])
+        print(GREEN + " Submitted bar job on %s !"%nodelist[i] + ENDC)
+
+    """check the completeness of bar job"""
+    while True: 
+      nfinish = 0
+      for i in range(len(orderparams)-1):
+        tmp = orderparams[i]
+        dirname = os.path.join(currDir, fname+"-%03d-%03d"%((int(float(tmp[0])*100)), (int(float(tmp[1])*100))))
+        f = 'freeEnergy.log'
+        f = os.path.join(dirname,f)
+        if os.path.isfile(f):
+          tail = subprocess.check_output("tail -n100 %s"%f, shell=True).decode("utf-8")
+          line = ''.join(list(tail))
+          if "Free Energy via BAR Iteration" in line:
+            nfinish += 1
+      if nfinish == (len(orderparams)-1):
+        print(GREEN + " All bar jobs have finished, cheers!" + ENDC)
+        break
+      else:
+        print(RED + " Waiting for some bar jobs to finish !" + ENDC)
+        time.sleep(30.0)
     return
   
   def result():
     Free = []
     Err = []
     Dir = []
+    fo = open("results.txt", "w")
     for i in range(len(orderparams)-1):
       tmp = orderparams[i]
       dirname = os.path.join(currDir, fname+"-%03d-%03d"% ((int(float(tmp[0])*100)), (int(float(tmp[1])*100))))
@@ -122,12 +177,29 @@ def main():
             Free.append(float(line.split()[-4]))
             Err.append(float(line.split()[-2]))
       else:
-            print("Free Energy calculation not complete in %s"%fname+"-%03d-%03d"%((int(float(tmp[0])*100)), (int(float(tmp[1])*100))))
-    for i,j,k in zip(Dir,Free,Err):
-      print("%20s%10.2f%10.2f"%(i,j,k))
-    totFree = np.array(Free).sum()
-    totErr = np.sqrt(np.square(np.array(Err)).sum())
-    print("%20s%10.2f%10.2f"%("Total Free Energy", totFree, totErr))
+            print(RED + "Free Energy calculation not complete in %s"%fname+"-%03d-%03d"%((int(float(tmp[0])*100)), (int(float(tmp[1])*100))) + ENDC)
+    [l10,l20] = orderparams[0]
+    [l11,l21] = orderparams[1]
+    if (float(l10)+float(l20)) > (float(l11)+float(l21)):
+      disappear = True
+    else:
+      disappear = False
+    if disappear:
+      for i,j,k in zip(Dir,Free,Err):
+        print(YELLOW + "%20s%10.2f%10.2f"%(i,-j,k) + ENDC)
+        fo.write("%20s%10.2f%10.2f\n"%(i,-j,k))
+      totFree = np.array(Free).sum()
+      totErr = np.sqrt(np.square(np.array(Err)).sum())
+      print(GREEN + "%20s%10.2f%10.2f"%("Total Free Energy", -totFree, totErr) + ENDC)
+      fo.write("%20s%10.2f%10.2f\n"%("Total Free Energy", -totFree, totErr))
+    else:
+      for i,j,k in zip(Dir,Free,Err):
+        print(YELLOW + "%20s%10.2f%10.2f"%(i,j,k) + ENDC)
+        fo.write("%20s%10.2f%10.2f\n"%(i,j,k))
+      totFree = np.array(Free).sum()
+      totErr = np.sqrt(np.square(np.array(Err)).sum())
+      print(GREEN + "%20s%10.2f%10.2f"%("Total Free Energy", totFree, totErr) + ENDC)
+      fo.write("%20s%10.2f%10.2f\n"%("Total Free Energy", totFree, totErr))
     return
 
   actions = {'setup':setup, 'dynamic':dynamic, 'bar':bar, 'result':result}
@@ -135,10 +207,9 @@ def main():
     if action in actions:
       actions[action]()
     else:
-      sys.exit("Usage: python simBARsim.py setup/dynamic/bar/result")
+      sys.exit(RED + "Usage: python simBARsim.py setup/dynamic/bar/result" + ENDC)
 
 if len(sys.argv) == 1:
-  sys.exit("Usage: python simBARsim.py setup/dynamic/bar/result")
+  sys.exit(RED + "Usage: python simBARsim.py setup/dynamic/bar/result" + ENDC)
 else:
   main()
-
