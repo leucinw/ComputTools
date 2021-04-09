@@ -104,7 +104,7 @@ def main():
         print(YELLOW + " .arc file exists in %s !"%dirname + ENDC)
       else:
         sub(nodelist[i], argDict["DYNAMICRUN"], dirname) 
-        print(GREEN + " Submitted dynamic job on %s !"%nodelist[i] + ENDC)
+        print(GREEN + " Submitted dynamic job on %s"%nodelist[i] + ENDC)
 
     """check the completeness of dynamic job"""
     while True: 
@@ -120,10 +120,10 @@ def main():
           if "ns/day" in line:
             nfinish += 1
       if nfinish == len(orderparams):
-        print(GREEN + " All dynamic jobs have finished, cheers!" + ENDC)
+        print(GREEN + " All DYNAMIC jobs have finished, cheers!" + ENDC)
         break
       else:
-        print(RED + " Waiting for some dynamic jobs to finish!" + ENDC)
+        print(RED + " Waiting for DYNAMIC jobs to finish!" + ENDC)
         time.sleep(30.0)
     return
   
@@ -133,13 +133,12 @@ def main():
       tmp = orderparams[i]
       dirname = os.path.join(currDir, fname+"-%03d-%03d"% ((int(float(tmp[0])*100)), (int(float(tmp[1])*100))))
       if os.path.isfile(os.path.join(dirname, argDict["TINKERXYZ"].replace(".xyz", ".bar"))):
-        print(" .bar file exists in %s !"%dirname)
         subprocess.run("rm -f %s/freeEnergy.log %s"%(dirname,os.path.join(dirname, argDict["TINKERXYZ"].replace(".xyz",".bar"))),shell=True)
         sub(nodelist[i], argDict["BARRUN"], dirname)
-        print(YELLOW + " Deleted .bar file in %s and Resubmitted bar job on %s !"%(dirname, nodelist[i]) + ENDC)
+        print(YELLOW + " Submitted BAR job on %s"%nodelist[i] + ENDC)
       else:
         sub(nodelist[i], argDict["BARRUN"], dirname) 
-        print(GREEN + " Submitted bar job on %s !"%nodelist[i] + ENDC)
+        print(GREEN + " Submitted BAR job on %s"%nodelist[i] + ENDC)
 
     """check the completeness of bar job"""
     while True: 
@@ -152,13 +151,13 @@ def main():
         if os.path.isfile(f):
           tail = subprocess.check_output("tail -n100 %s"%f, shell=True).decode("utf-8")
           line = ''.join(list(tail))
-          if "Free Energy via BAR Iteration" in line:
+          if "Free Energy via BAR Bootstrap" in line:
             nfinish += 1
       if nfinish == (len(orderparams)-1):
-        print(GREEN + " All bar jobs have finished, cheers!" + ENDC)
+        print(GREEN + " All BAR jobs have finished, cheers!" + ENDC)
         break
       else:
-        print(RED + " Waiting for some bar jobs to finish !" + ENDC)
+        print(RED + " Waiting for BAR jobs to finish !" + ENDC)
         time.sleep(30.0)
     return
   
@@ -166,7 +165,7 @@ def main():
     Free = []
     Err = []
     Dir = []
-    fo = open("results.txt", "w")
+    fo = open("result.txt", "w")
     for i in range(len(orderparams)-1):
       tmp = orderparams[i]
       dirname = os.path.join(currDir, fname+"-%03d-%03d"% ((int(float(tmp[0])*100)), (int(float(tmp[1])*100))))
@@ -186,20 +185,20 @@ def main():
       disappear = False
     if disappear:
       for i,j,k in zip(Dir,Free,Err):
-        print(YELLOW + "%20s%10.2f%10.2f"%(i,-j,k) + ENDC)
-        fo.write("%20s%10.2f%10.2f\n"%(i,-j,k))
+        print(YELLOW + "%20s%15.8f%15.8f"%(i,-j,k) + ENDC)
+        fo.write("%20s%15.8f%15.8f\n"%(i,-j,k))
       totFree = np.array(Free).sum()
       totErr = np.sqrt(np.square(np.array(Err)).sum())
-      print(GREEN + "%20s%10.2f%10.2f"%("Total Free Energy", -totFree, totErr) + ENDC)
-      fo.write("%20s%10.2f%10.2f\n"%("Total Free Energy", -totFree, totErr))
+      print(GREEN + "%20s%15.8f%15.8f"%("Total Free Energy", -totFree, totErr) + ENDC)
+      fo.write("%20s%15.8f%15.8f\n"%("Total Free Energy", -totFree, totErr))
     else:
       for i,j,k in zip(Dir,Free,Err):
-        print(YELLOW + "%20s%10.2f%10.2f"%(i,j,k) + ENDC)
-        fo.write("%20s%10.2f%10.2f\n"%(i,j,k))
+        print(YELLOW + "%20s%15.8f%15.8f"%(i,j,k) + ENDC)
+        fo.write("%20s%15.8f%15.8f\n"%(i,j,k))
       totFree = np.array(Free).sum()
       totErr = np.sqrt(np.square(np.array(Err)).sum())
-      print(GREEN + "%20s%10.2f%10.2f"%("Total Free Energy", totFree, totErr) + ENDC)
-      fo.write("%20s%10.2f%10.2f\n"%("Total Free Energy", totFree, totErr))
+      print(GREEN + "%20s%15.8f%15.8f"%("Total Free Energy", totFree, totErr) + ENDC)
+      fo.write("%20s%15.8f%15.8f\n"%("Total Free Energy", totFree, totErr))
     return
 
   actions = {'setup':setup, 'dynamic':dynamic, 'bar':bar, 'result':result}
