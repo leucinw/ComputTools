@@ -21,6 +21,7 @@
   * [x] lGaussianJobRepair.py: simple repair of common "Error terminated" Gaussian jobs 
   * [x] lkeyformatter.py: write a formatted/organized key/prm file from input key(s)/prm(s) 
   * [x] loptimization.py: an example for least square optimization problem
+  * [x] lpoketfinder.py: protein-ligand binding pocket finder
   * [x] lProbingESP.py: generate com and xyz structures with probing ion/charge 
   * [x] lsub.py: automatically detect and submit QM jobs on clusters 
   * [x] ltorsion.py: fit/refine torsion parameters for AMOEBA/AMOEBA+ FFs
