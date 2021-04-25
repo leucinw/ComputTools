@@ -23,7 +23,7 @@ def main():
   parser.add_argument('-c2', dest = 'ncolumn2',required=False, type=int)  
   parser.add_argument('-s1', dest = 'skiprow1', default=0, type=int)  
   parser.add_argument('-s2', dest = 'skiprow2', default=0, type=int)  
-  parser.add_argument('-o',  dest = 'operator', required=True, type=str.upper, choices=['MIN', 'MAX', 'MEDIAN', 'MEAN', 'STD', 'RMSE', 'MUE', 'MSE'])
+  parser.add_argument('-o',  dest = 'operator', required=True, type=str.upper, choices=['MIN', 'MAX', 'MEDIAN', 'MEAN', 'STD', 'SUM', 'RMSE', 'MUE', 'MSE'])
   args = vars(parser.parse_args())
   
   #===>>> 
@@ -56,6 +56,10 @@ def main():
   def fstd(arr):
     print(GREEN + "Standard Deviation: %12.6f"%(np.std(arr)) + ENDC)
     return 
+  # summation 
+  def fsum(arr):
+    print(GREEN + "Total: %12.6f"%(np.sum(arr)) + ENDC)
+    return 
   # root mean square error/deviation
   def frmse(arr1,arr2):
     rmse = np.sqrt(np.square(arr1-arr2).mean())
@@ -86,6 +90,8 @@ def main():
     fmedian(arr1)
   elif (op == "STD"):
     fstd(arr1)
+  elif (op == "SUM"):
+    fsum(arr1)
   elif (op == "RMSE"):
     frmse(arr1, arr2)
   elif (op == "MSE"):
