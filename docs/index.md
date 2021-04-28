@@ -18,6 +18,7 @@
   * [x] lconvert.py: convert a variety formats of chemical files from one to another
   * [x] ldensity.py: calculate instant density from tinker/tinker-openmm trajectory file(arc) 
   * [x] ldimerinteract.py: generate structure of dimer cluster of interested interactions
+  * [x] lextractcluster.py: extract a cluster structure from liquid box 
   * [x] lGaussianJobRepair.py: simple repair of common "Error terminated" Gaussian jobs 
   * [x] lkeyformatter.py: write a formatted/organized key/prm file from input key(s)/prm(s) 
   * [x] loptimization.py: an example for least square optimization problem
