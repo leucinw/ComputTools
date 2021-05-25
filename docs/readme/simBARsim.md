@@ -27,4 +27,4 @@
 	
 * Example:
 
-	An example folder to run K+ solvation in water is provided [here]([https://github.com/leucinw/ComputTools/tree/master/docs/data/bardemo)
+	An example folder to run K+ solvation in water is provided [here](https://github.com/leucinw/ComputTools/tree/master/docs/data/bardemo)
