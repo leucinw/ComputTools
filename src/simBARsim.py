@@ -123,7 +123,7 @@ def main():
         print(GREEN + " All DYNAMIC jobs have finished, cheers!" + ENDC)
         break
       else:
-        print(RED + " Waiting for DYNAMIC jobs to finish!" + ENDC)
+        print(RED + " Waiting for DYNAMIC jobs to finish!" + ENDC, end="\r")
         time.sleep(30.0)
     return
   
@@ -151,13 +151,13 @@ def main():
         if os.path.isfile(f):
           tail = subprocess.check_output("tail -n100 %s"%f, shell=True).decode("utf-8")
           line = ''.join(list(tail))
-          if "Free Energy via BAR Bootstrap" in line:
+          if ("Free Energy via BAR Bootstrap" in line) or ("Free Energy via BAR Iteration"):
             nfinish += 1
       if nfinish == (len(orderparams)-1):
         print(GREEN + " All BAR jobs have finished, cheers!" + ENDC)
         break
       else:
-        print(RED + " Waiting for BAR jobs to finish !" + ENDC)
+        print(RED + " Waiting for BAR jobs to finish !" + ENDC, end="\r")
         time.sleep(30.0)
     return
   
@@ -166,15 +166,24 @@ def main():
     Err = []
     Dir = []
     fo = open("result.txt", "w")
+
     for i in range(len(orderparams)-1):
       tmp = orderparams[i]
       dirname = os.path.join(currDir, fname+"-%03d-%03d"% ((int(float(tmp[0])*100)), (int(float(tmp[1])*100))))
       Dir.append(fname+"-%03d-%03d"%((int(float(tmp[0])*100)), (int(float(tmp[1])*100))))
       if os.path.isfile(os.path.join(dirname, "freeEnergy.log")):
+        find = False
         for line in open(os.path.join(dirname,"freeEnergy.log")).readlines():
           if "Free Energy via BAR Iteration" in line:
+            find = True
             Free.append(float(line.split()[-4]))
             Err.append(float(line.split()[-2]))
+          if (not find) and ("Free Energy via BAR Bootstrap" in line):
+            find = True
+            Free.append(float(line.split()[-4]))
+            Err.append(float(line.split()[-2]))
+        if not find:
+          sys.exit(RED + "Could not find free energy for %s"%dirname + ENDC)
       else:
             print(RED + "Free Energy calculation not complete in %s"%fname+"-%03d-%03d"%((int(float(tmp[0])*100)), (int(float(tmp[1])*100))) + ENDC)
     [l10,l20] = orderparams[0]
@@ -185,20 +194,20 @@ def main():
       disappear = False
     if disappear:
       for i,j,k in zip(Dir,Free,Err):
-        print(YELLOW + "%20s%15.8f%15.8f"%(i,-j,k) + ENDC)
-        fo.write("%20s%15.8f%15.8f\n"%(i,-j,k))
+        print(YELLOW + "%20s%14.6f%14.6f"%(i,-j,k) + ENDC)
+        fo.write("%20s%14.6f%14.6f\n"%(i,-j,k))
       totFree = np.array(Free).sum()
       totErr = np.sqrt(np.square(np.array(Err)).sum())
-      print(GREEN + "%20s%15.8f%15.8f"%("Total Free Energy", -totFree, totErr) + ENDC)
-      fo.write("%20s%15.8f%15.8f\n"%("Total Free Energy", -totFree, totErr))
+      print(GREEN + "%20s%14.6f%14.6f"%("Total Free Energy", -totFree, totErr) + ENDC)
+      fo.write("%20s%14.6f%14.6f\n"%("Total Free Energy", -totFree, totErr))
     else:
       for i,j,k in zip(Dir,Free,Err):
-        print(YELLOW + "%20s%15.8f%15.8f"%(i,j,k) + ENDC)
-        fo.write("%20s%15.8f%15.8f\n"%(i,j,k))
+        print(YELLOW + "%20s%14.6f%14.6f"%(i,j,k) + ENDC)
+        fo.write("%20s%14.6f%14.6f\n"%(i,j,k))
       totFree = np.array(Free).sum()
       totErr = np.sqrt(np.square(np.array(Err)).sum())
-      print(GREEN + "%20s%15.8f%15.8f"%("Total Free Energy", totFree, totErr) + ENDC)
-      fo.write("%20s%15.8f%15.8f\n"%("Total Free Energy", totFree, totErr))
+      print(GREEN + "%20s%14.6f%14.6f"%("Total Free Energy", totFree, totErr) + ENDC)
+      fo.write("%20s%14.6f%14.6f\n"%("Total Free Energy", totFree, totErr))
     return
 
   actions = {'setup':setup, 'dynamic':dynamic, 'bar':bar, 'result':result}
