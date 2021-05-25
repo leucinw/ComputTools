@@ -10,7 +10,7 @@
 	 python addLonePairSite.py txyz
 	 ```
 
-Intro:
+* Intro:
 	
 	This program is to generate lone pair site (extra site) for the following atoms. Tinker xyz file is required.
 
@@ -18,4 +18,6 @@ Intro:
    1. sp2 Oxygen, e.g. (CH3)2C=O
    1. sp3 Nitrogen, e.g. NH3
    1. sp2 Nitrogen, e.g. N=C
-   1. sp3 Sulphur, e.g. R-SH, R-S-R, DMSO 
+   1. sp3 Sulphur, e.g. R-SH, R-S-R, DMSO
+
+* Some old libraries are used. This need to be updated.

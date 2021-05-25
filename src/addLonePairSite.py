@@ -40,7 +40,6 @@ def main(txyz):
   for i in xrange(len(connections)):
     coordConnect = []
     hyb = mol.atoms[int(connections[i][0])-1].hyb
-    #print "Atom %s hybridization is sp%s"%(atoms[i], hyb) 
     coordONS = mol.atoms[int(connections[i][0])-1].coords
     for j in xrange(1, len(connections[i])):
       coord = mol.atoms[int(connections[i][int(j)])-1].coords
@@ -110,12 +109,9 @@ def main(txyz):
       for dat in data[6:]:
         if int(dat)!= int(connections[i][0]):
           betaC.append(int(dat))
-      #print betaC
       alphaC = mol.atoms[int(connections[i][1])-1].coords
-      #print alphaC,len(mol.atoms)
       betaC1 = mol.atoms[int(betaC[0])-1].coords
       betaC2 = mol.atoms[int(betaC[1])-1].coords
-      #print betaC1, betaC2 
       
       betaC_alphaC_1 = np.array(alphaC) - np.array(betaC1)
       betaC_alphaC_1 = betaC_alphaC_1/np.linalg.norm(betaC_alphaC_1)
@@ -135,7 +131,7 @@ def main(txyz):
       iatom += 1
     ############################################################################################################################################
     else:
-      print "No atoms in %s file need to add LP!"%txyz
+      print(f"No atoms in {txyz} file need to add LP!"
   temp.close()
 
   of = open("head", "w")
