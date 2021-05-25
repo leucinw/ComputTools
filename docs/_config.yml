@@ -3,3 +3,6 @@ theme: jekyll-theme-slate
 relative_links:
   enabled: true
   collections: true
+
+include:
+  - docs/.readme/lsub.md
