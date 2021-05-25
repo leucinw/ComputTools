@@ -1,6 +1,6 @@
 ## lAssignAMOEBAplusPRM.py
 
-Source: https://github.com/leucinw/ComputTools/tree/master/src/lAssignAMOEBAplusPRM.py
+Source: [https://github.com/leucinw/ComputTools/tree/master/src/lAssignAMOEBAplusPRM.py](https://github.com/leucinw/ComputTools/tree/master/src/lAssignAMOEBAplusPRM.py)
 
 Usage:
 

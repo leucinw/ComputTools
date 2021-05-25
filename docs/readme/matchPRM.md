@@ -1,6 +1,6 @@
 ## matchPRM.py
 
-Source: https://github.com/leucinw/ComputTools/tree/master/src/matchPRM.py
+Source: [https://github.com/leucinw/ComputTools/tree/master/src/matchPRM.py](https://github.com/leucinw/ComputTools/tree/master/src/matchPRM.py)
 
 Usage:
 
