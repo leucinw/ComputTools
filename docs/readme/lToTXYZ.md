@@ -1,4 +1,5 @@
-## A short intro of lToTXYZ.py program
+## lToTXYZ.py
+
 Source: https://github.com/leucinw/ComputTools/tree/master/src/lToTXYZ.py
 
 Usage:

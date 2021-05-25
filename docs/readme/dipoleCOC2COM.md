@@ -1,4 +1,5 @@
-## A short intro of dipoleCOC2COM.py program
+## dipoleCOC2COM.py
+
 Source: https://github.com/leucinw/ComputTools/tree/master/src/dipoleCOC2COM.py
 
 Usage:

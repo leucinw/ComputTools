@@ -1,4 +1,5 @@
-## A short intro of lkeyformatter.py program
+## lkeyformatter.py
+
 Source: https://github.com/leucinw/ComputTools/tree/master/src/lkeyformatter.py
 
 Usage:

@@ -1,4 +1,5 @@
-## A short intro of lpocketfinder.py program
+## lpocketfinder.py
+
 Source: https://github.com/leucinw/ComputTools/tree/master/src/lpocketfinder.py
 
 Usage:

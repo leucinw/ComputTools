@@ -1,4 +1,5 @@
-## A short intro of diagonalize.py program
+## diagonalize.py
+
 Source: https://github.com/leucinw/ComputTools/tree/master/src/diagonalize.py
 
 Usage:

@@ -1,4 +1,5 @@
-## A short intro of ltorsion.py program
+## ltorsion.py
+
 Source: https://github.com/leucinw/ComputTools/tree/master/src/ltorsion.py
 
 Usage:

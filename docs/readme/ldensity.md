@@ -1,4 +1,5 @@
-## A short intro of ldensity.py program
+## ldensity.py
+
 Source: https://github.com/leucinw/ComputTools/tree/master/src/ldensity.py
 
 Usage:

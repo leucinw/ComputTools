@@ -1,4 +1,5 @@
-## A short intro of lsub.py program
+## lsub.py
+
 Source: https://github.com/leucinw/ComputTools/tree/master/src/lsub.py
 
 Usage:

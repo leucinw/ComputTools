@@ -1,4 +1,5 @@
-## A short intro of lbuildcovalent.py program
+## lbuildcovalent.py
+
 Source: https://github.com/leucinw/ComputTools/tree/master/src/lbuildcovalent.py
 
 Usage:

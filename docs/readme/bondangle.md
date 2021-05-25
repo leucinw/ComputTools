@@ -1,4 +1,5 @@
-## A short intro of bondangle.py program
+## bondangle.py
+
 Source: https://github.com/leucinw/ComputTools/tree/master/src/bondangle.py
 
 Usage:
