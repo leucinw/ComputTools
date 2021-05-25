@@ -1,5 +1,5 @@
 ## A short intro of `lBulkSimulation.py` program
-Source: ../src/lBulkSimulation.py
+Source: https://github.com/leucinw/ComputTools/tree/master/src/lBulkSimulation.py
 
 Usage:
 

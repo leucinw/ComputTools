@@ -1,5 +1,5 @@
 ## A short intro of `latomtyper.py` program
-Source: ../src/latomtyper.py
+Source: https://github.com/leucinw/ComputTools/tree/master/src/latomtyper.py
 
 Usage:
 

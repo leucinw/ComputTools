@@ -1,5 +1,5 @@
 ## A short intro of `lconvert.py` program
-Source: ../src/lconvert.py
+Source: https://github.com/leucinw/ComputTools/tree/master/src/lconvert.py
 
 Usage:
 

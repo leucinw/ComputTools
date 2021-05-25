@@ -1,5 +1,5 @@
 ## A short intro of `diagonalize.py` program
-Source: ../src/diagonalize.py
+Source: https://github.com/leucinw/ComputTools/tree/master/src/diagonalize.py
 
 Usage:
 

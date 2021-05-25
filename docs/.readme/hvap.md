@@ -1,5 +1,5 @@
 ## A short intro of `hvap.py` program
-Source: ../src/hvap.py
+Source: https://github.com/leucinw/ComputTools/tree/master/src/hvap.py
 
 Usage:
 

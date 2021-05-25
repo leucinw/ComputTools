@@ -1,5 +1,5 @@
 ## A short intro of `lbuildcovalent.py` program
-Source: ../src/lbuildcovalent.py
+Source: https://github.com/leucinw/ComputTools/tree/master/src/lbuildcovalent.py
 
 Usage:
 

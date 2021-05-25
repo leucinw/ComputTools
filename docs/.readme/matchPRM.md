@@ -1,5 +1,5 @@
 ## A short intro of `matchPRM.py` program
-Source: ../src/matchPRM.py
+Source: https://github.com/leucinw/ComputTools/tree/master/src/matchPRM.py
 
 Usage:
 

@@ -1,5 +1,5 @@
 ## A short intro of `firstMolecule.py` program
-Source: ../src/firstMolecule.py
+Source: https://github.com/leucinw/ComputTools/tree/master/src/firstMolecule.py
 
 Usage:
 

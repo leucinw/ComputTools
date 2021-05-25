@@ -1,5 +1,5 @@
 ## A short intro of `lclusterbuilder.py` program
-Source: ../src/lclusterbuilder.py
+Source: https://github.com/leucinw/ComputTools/tree/master/src/lclusterbuilder.py
 
 Usage:
 

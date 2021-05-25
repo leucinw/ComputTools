@@ -1,5 +1,5 @@
 ## A short intro of `simBARsim.py` program
-Source: ../src/simBARsim.py
+Source: https://github.com/leucinw/ComputTools/tree/master/src/simBARsim.py
 
 Usage:
 

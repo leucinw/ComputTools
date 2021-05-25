@@ -1,5 +1,5 @@
 ## A short intro of `ltranslate.py` program
-Source: ../src/ltranslate.py
+Source: https://github.com/leucinw/ComputTools/tree/master/src/ltranslate.py
 
 Usage:
 
