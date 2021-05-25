@@ -1,8 +1,14 @@
 ## diagonalize.py
 
-Source: [https://github.com/leucinw/ComputTools/tree/master/src/diagonalize.py](https://github.com/leucinw/ComputTools/tree/master/src/diagonalize.py)
+* Source: 
+	
+	[https://github.com/leucinw/ComputTools/tree/master/src/diagonalize.py](https://github.com/leucinw/ComputTools/tree/master/src/diagonalize.py)
 
-Usage:
+* Usage:
+	
+	```shell
+	python diagonalize.py gau.out
+	```
+* Intro:
 
-Intro:
-
+	 This program is to find three eigenvalues from polarizability tensor, which is from Gaussian output "Exact polarizability". The resulted eigenvalues can be directly compared with Tinker output (`polarize`) .

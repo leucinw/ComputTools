@@ -8,7 +8,7 @@
 # find three eigenvalues from polarizability tensor 
 # calculated from Gaussian output "Exact polarizability"
 
-
+import sys
 import numpy as np
 
 def diag(gauOut):
@@ -30,3 +30,5 @@ def diag(gauOut):
   else:
     print("%30s Not found!"%gauOut)
   return
+
+diag(sys.argv[1])
