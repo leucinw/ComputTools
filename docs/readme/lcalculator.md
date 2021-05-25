@@ -8,9 +8,9 @@
 
 	```shell
 	python lcalculator.py -f1 DATAFILE1   -c1 NCOLUMN1 
-											 [-f2 DATAFILE2] [-c2 NCOLUMN2] 
-											 [-s1 SKIPROW1]  [-s2 SKIPROW2] 
-											 -o {MIN,MAX,MEDIAN,MEAN,STD,SUM,RMSE,MUE,MSE}
+	[-f2 DATAFILE2] [-c2 NCOLUMN2] 
+	[-s1 SKIPROW1]  [-s2 SKIPROW2] 
+	-o {MIN,MAX,MEDIAN,MEAN,STD,SUM,RMSE,MUE,MSE}
 	```
 
 * Intro:
