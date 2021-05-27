@@ -2,7 +2,7 @@
 
 * Source:
 
- [click here](https://github.com/leucinw/ComputTools/tree/master/src/subsubmit.py)
+	[click here](https://github.com/leucinw/ComputTools/tree/master/src/subsubmit.py)
 
 * Usage:
 
@@ -23,14 +23,14 @@
 	
 	Here is the efficiency validations on 2163 `polarize` jobs.
 
-	| Command    | Description | Wall Time (s) |
+	| Command    | Description | Time (s) |
 	| ----------- | ----------- |--------|
-	| `sh polar*.sh`      | sequencially run on one node       |   396     |
-	| `python subsubmit.py -x polar*.sh -n node91`  | parallelly run on one node        |     36   |
-  | `python subsubmit.py -x polar*.sh -n node91 node92` | parallelly run on 2 nodes | 20 |
-  | `python subsubmit.py -x polar*.sh -n node91 node92 node93 node94`|  parallelly run on 4 nodes 	 | 11 |
-  | `python subsubmit.py -x polar*.sh -n node91 node92 node93 node94 node95 node96`|  parallelly run on 6 nodes 	 | 8 |
-  | `python subsubmit.py -x polar*.sh -n node91 node92 node93 node94 node95 node96 node97 node98`|  parallelly run on 8 nodes | 7 |
+	| `sh polar*.sh`      | sequencial       |   396     |
+	| `python subsubmit.py -x polar*.sh -n node91`  | parallel; 1 node        |     36   |
+  | `python subsubmit.py -x polar*.sh -n node91 node92` | parallel; 2 nodes | 20 |
+  | `python subsubmit.py -x polar*.sh -n node91 node92 node93 node94`|  parallel; 4 nodes | 11 |
+  | `python subsubmit.py -x polar*.sh -n node91 node92 node93 node94 node95 node96`|  parallel; 6 nodes | 8 |
+  | `python subsubmit.py -x polar*.sh -n node91 node92 node93 node94 node95 node96 node97 node98`|  parallel; 8 nodes | 7 |
 
 	As seen above, more than 50x accelaration is obtained by using Depending on how many CPU cores your `submitting` node has, the efficiency may vary. Consulting [GNU parallel](https://www.gnu.org/software/parallel/parallel_tutorial.html) for more information.
 	
