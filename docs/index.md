@@ -27,3 +27,5 @@
 * [matchTXYZ](./readme/matchTXYZ.md)
 * [reformatISA](./readme/reformatISA.md)
 * [simBARsim](./readme/simBARsim.md)
+* [submit](./readme/submit.md)
+* [subsubmit](./readme/subsubmit.md)

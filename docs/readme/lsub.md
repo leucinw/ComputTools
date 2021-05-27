@@ -1,8 +1,10 @@
 ## lsub.py
 
-Source: [https://github.com/leucinw/ComputTools/tree/master/src/lsub.py](https://github.com/leucinw/ComputTools/tree/master/src/lsub.py)
+* Source:
 
-Usage:
+ [click here](https://github.com/leucinw/ComputTools/tree/master/src/lsub.py)
 
-Intro:
+* Usage:
+
+* Intro:
 

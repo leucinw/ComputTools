@@ -1,8 +1,10 @@
 ## ldensity.py
 
-Source: [https://github.com/leucinw/ComputTools/tree/master/src/ldensity.py](https://github.com/leucinw/ComputTools/tree/master/src/ldensity.py)
+* Source:
 
-Usage:
+ [click here](https://github.com/leucinw/ComputTools/tree/master/src/ldensity.py)
 
-Intro:
+* Usage:
+
+* Intro:
 

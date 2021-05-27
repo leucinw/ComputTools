@@ -1,8 +1,10 @@
 ## lconvert.py
 
-Source: [https://github.com/leucinw/ComputTools/tree/master/src/lconvert.py](https://github.com/leucinw/ComputTools/tree/master/src/lconvert.py)
+* Source:
 
-Usage:
+ [click here](https://github.com/leucinw/ComputTools/tree/master/src/lconvert.py)
 
-Intro:
+* Usage:
+
+* Intro:
 

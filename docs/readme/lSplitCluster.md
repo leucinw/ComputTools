@@ -1,8 +1,10 @@
 ## lSplitCluster.py
 
-Source: [https://github.com/leucinw/ComputTools/tree/master/src/lSplitCluster.py](https://github.com/leucinw/ComputTools/tree/master/src/lSplitCluster.py)
+* Source:
 
-Usage:
+ [click here](https://github.com/leucinw/ComputTools/tree/master/src/lSplitCluster.py)
 
-Intro:
+* Usage:
+
+* Intro:
 

@@ -1,8 +1,10 @@
 ## ldimerinteract.py
 
-Source: [https://github.com/leucinw/ComputTools/tree/master/src/ldimerinteract.py](https://github.com/leucinw/ComputTools/tree/master/src/ldimerinteract.py)
+* Source:
 
-Usage:
+ [click here](https://github.com/leucinw/ComputTools/tree/master/src/ldimerinteract.py)
 
-Intro:
+* Usage:
+
+* Intro:
 

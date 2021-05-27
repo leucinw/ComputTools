@@ -1,8 +1,10 @@
 ## lpocketfinder.py
 
-Source: [https://github.com/leucinw/ComputTools/tree/master/src/lpocketfinder.py](https://github.com/leucinw/ComputTools/tree/master/src/lpocketfinder.py)
+* Source:
 
-Usage:
+ [click here](https://github.com/leucinw/ComputTools/tree/master/src/lpocketfinder.py)
 
-Intro:
+* Usage:
+
+* Intro:
 

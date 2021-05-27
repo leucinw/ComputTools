@@ -1,8 +1,10 @@
 ## lForceBalancePrep.py
 
-Source: [https://github.com/leucinw/ComputTools/tree/master/src/lForceBalancePrep.py](https://github.com/leucinw/ComputTools/tree/master/src/lForceBalancePrep.py)
+* Source:
 
-Usage:
+ [click here](https://github.com/leucinw/ComputTools/tree/master/src/lForceBalancePrep.py)
 
-Intro:
+* Usage:
+
+* Intro:
 

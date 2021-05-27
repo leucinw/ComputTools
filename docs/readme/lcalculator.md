@@ -2,7 +2,7 @@
 
 * Source: 
 	
-	[https://github.com/leucinw/ComputTools/tree/master/src/lcalculator.py](https://github.com/leucinw/ComputTools/tree/master/src/lcalculator.py)
+	[click here](https://github.com/leucinw/ComputTools/tree/master/src/lcalculator.py)
 
 * Usage:
 

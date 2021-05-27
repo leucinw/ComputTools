@@ -1,8 +1,10 @@
 ## reformatISA.py
 
-Source: [https://github.com/leucinw/ComputTools/tree/master/src/reformatISA.py](https://github.com/leucinw/ComputTools/tree/master/src/reformatISA.py)
+* Source:
 
-Usage:
+ [click here](https://github.com/leucinw/ComputTools/tree/master/src/reformatISA.py)
 
-Intro:
+* Usage:
+
+* Intro:
 

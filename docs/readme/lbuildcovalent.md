@@ -1,8 +1,10 @@
 ## lbuildcovalent.py
 
-Source: [https://github.com/leucinw/ComputTools/tree/master/src/lbuildcovalent.py](https://github.com/leucinw/ComputTools/tree/master/src/lbuildcovalent.py)
+* Source:
 
-Usage:
+ [click here](https://github.com/leucinw/ComputTools/tree/master/src/lbuildcovalent.py)
 
-Intro:
+* Usage:
+
+* Intro:
 

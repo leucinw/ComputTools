@@ -1,8 +1,10 @@
 ## dipoleCOC2COM.py
 
-Source: [https://github.com/leucinw/ComputTools/tree/master/src/dipoleCOC2COM.py](https://github.com/leucinw/ComputTools/tree/master/src/dipoleCOC2COM.py)
+* Source:
 
-Usage:
+ [click here](https://github.com/leucinw/ComputTools/tree/master/src/dipoleCOC2COM.py)
 
-Intro:
+* Usage:
+
+* Intro:
 

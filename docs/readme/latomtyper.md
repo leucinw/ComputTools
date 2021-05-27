@@ -1,8 +1,10 @@
 ## latomtyper.py
 
-Source: [https://github.com/leucinw/ComputTools/tree/master/src/latomtyper.py](https://github.com/leucinw/ComputTools/tree/master/src/latomtyper.py)
+* Source:
 
-Usage:
+ [click here](https://github.com/leucinw/ComputTools/tree/master/src/latomtyper.py)
 
-Intro:
+* Usage:
+
+* Intro:
 

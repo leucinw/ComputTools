@@ -1,8 +1,10 @@
 ## lToTXYZ.py
 
-Source: [https://github.com/leucinw/ComputTools/tree/master/src/lToTXYZ.py](https://github.com/leucinw/ComputTools/tree/master/src/lToTXYZ.py)
+* Source:
 
-Usage:
+ [click here](https://github.com/leucinw/ComputTools/tree/master/src/lToTXYZ.py)
 
-Intro:
+* Usage:
+
+* Intro:
 
