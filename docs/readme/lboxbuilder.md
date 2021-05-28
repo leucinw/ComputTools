@@ -12,7 +12,7 @@
 
 * Intro:
 
-	This program is to generate simulation box for Tinker/Tinker-OpenMM/Tinker9. Currently the following functions are provided: 
+	This program is used to generate simulation box for Tinker/Tinker-OpenMM/Tinker9. Currently the following functions are provided: 
 	
 	* Pure liquid box with specified density/box size
 	* One molecule in water (for hydration) or other solvents (solvation) with specified density/box size

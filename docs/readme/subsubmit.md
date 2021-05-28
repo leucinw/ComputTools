@@ -11,12 +11,12 @@
 	```
 * Intro:
 
-	This is to submit one or multiple script(s) to one or multiple CPU node. One does not have to login to a computing node to execute this program. This is very useful for submitting light jobs such as `analyze`, `minimize`, `polarize` etc of Tinker software. `parallel` tool of GNU is used to submit the high level script files. On a certain node, `concurrent.futures` model of Python is used to submit the low-level scripts files, as describe in [submit](./submit.md).
+	This program is used to submit one or multiple script(s) to one or multiple CPU node. One does not have to login to a computing node to execute this program. This is very useful for submitting light jobs such as `analyze`, `minimize`, `polarize` etc of Tinker software. `parallel` tool of GNU is used to submit the high level script files. On a certain node, `concurrent.futures` model of Python is used to submit the low-level scripts files, as describe in [submit](./submit.md).
 
 * Example:
 	
 	```shell
-	python submit.py -x ana1.sh ana2.sh ana3.sh ... ana1000.sh -n node90 node91 node92 ... node100
+	python submit.py -x ana1.sh ana2.sh ... ana1000.sh -n node90 node91 ... node100
 	```
 
 * Efficiency:
@@ -26,11 +26,11 @@
 	| Command    | Description | Time (s) |
 	| ----------- | ----------- |--------|
 	| `sh polar*.sh`      | sequencial       |   396     |
-	| `python subsubmit.py -x polar*.sh -n node91`  | parallel; 1 node        |     36   |
-  | `python subsubmit.py -x polar*.sh -n node91 node92` | parallel; 2 nodes | 20 |
-  | `python subsubmit.py -x polar*.sh -n node91 node92 node93 node94`|  parallel; 4 nodes | 11 |
-  | `python subsubmit.py -x polar*.sh -n node91 node92 node93 node94 node95 node96`|  parallel; 6 nodes | 8 |
-  | `python subsubmit.py -x polar*.sh -n node91 node92 node93 node94 node95 node96 node97 node98`|  parallel; 8 nodes | 7 |
+	| `python subsubmit.py -x polar*.sh -n node91`  | parallel; 1 node        | 36|
+  | `python subsubmit.py -x polar*.sh -n node91 node...`| parallel; 2 nodes | 20|
+  | `python subsubmit.py -x polar*.sh -n node91 node...`| parallel; 4 nodes | 11|
+  | `python subsubmit.py -x polar*.sh -n node91 node...`| parallel; 6 nodes | 8 |
+  | `python subsubmit.py -x polar*.sh -n node91 node...`| parallel; 8 nodes | 7 |
 
 	As seen above, more than 50x accelaration is obtained by using Depending on how many CPU cores your `submitting` node has, the efficiency may vary. Consulting [GNU parallel](https://www.gnu.org/software/parallel/parallel_tutorial.html) for more information.
 	

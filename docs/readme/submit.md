@@ -11,7 +11,7 @@
 	```
 * Intro:
 
-	This is to submit one or multiple script(s) to one CPU node. One must login to a computing node to execute this program. This is very useful for submitting light jobs such as `analyze`, `minimize`, `polarize` etc of Tinker software. `concurrent` module of Python is used to parallellize the jobs.
+	This program is used to submit one or multiple script(s) to one CPU node. One must login to a computing node to execute this program. This is very useful for submitting light jobs such as `analyze`, `minimize`, `polarize` etc of Tinker software. `concurrent` module of Python is used to parallellize the jobs.
 
 * Example:
 	

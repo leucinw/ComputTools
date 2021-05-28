@@ -12,7 +12,7 @@
 
 * Intro:
 	
-	This program is to generate lone pair site (extra site) for the following atoms. Tinker xyz file is required.
+	This program is used to generate lone pair site (extra site) for the following atoms. Tinker xyz file is required.
 
    1. sp3 Oxygen, e.g. H2O, CH3OH, CH3-O-CH3
    1. sp2 Oxygen, e.g. (CH3)2C=O
