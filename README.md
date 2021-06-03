@@ -1,3 +1,3 @@
 # ComputTools
 
-Please visite [https://leucinw.com](https://leucinw.com) for documentation.
+Please visit [https://leucinw.com](https://leucinw.com) for documentation.
