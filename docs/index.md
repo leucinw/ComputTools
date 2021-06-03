@@ -3,6 +3,7 @@
 * [diagonalize](./readme/diagonalize.md)
 * [dipoleCOC2COM](./readme/dipoleCOC2COM.md)
 * [lAssignAMOEBAplusPRM](./readme/lAssignAMOEBAplusPRM.md)
+* [lAtomTypeGenerator](./readme/lAtomTypeGenerator.md)
 * [lForceBalancePrep](./readme/lForceBalancePrep.md)
 * [lGaussianJobRepair](./readme/lGaussianJobRepair.md)
 * [lProbingESP](./readme/lProbingESP.md)
