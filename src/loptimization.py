@@ -18,7 +18,7 @@ def f_diff(params):
 
 def main():
   x0 = np.loadtxt("p0.txt",usecols=(-1,), dtype='float')
-  myBounds = ([0.3]*len(x0), [2.5]*len(x0)]) # use bounds
+  myBounds = ([0.3]*len(x0), [2.5]*len(x0)) # use bounds
   ret = least_squares(f_diff, x0, bounds=myBounds)
   np.savetxt("p1.txt", ret.x,fmt='%15.10f')
 

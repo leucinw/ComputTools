@@ -16,22 +16,22 @@
 * Example:
 	
 	```shell
-	python submit.py -x ana1.sh ana2.sh ... ana1000.sh -n node90 node91 ... node100
+	python subsubmit.py -x ana1.sh ana2.sh ... ana1000.sh -n node90 node91 ... node100
 	```
 
 * Efficiency:
 	
 	Here is the efficiency validations on 2163 `polarize` jobs.
 
-	| Command    | Description | Time (s) |
+	| Command    | Description | Time(s)|
 	| ----------- | ----------- |--------|
 	| `sh polar*.sh`      | sequencial       |   396     |
-	| `python subsubmit.py -x polar*.sh -n node91`  | parallel; 1 node        | 36|
-  | `python subsubmit.py -x polar*.sh -n node91 node...`| parallel; 2 nodes | 20|
-  | `python subsubmit.py -x polar*.sh -n node91 node...`| parallel; 4 nodes | 11|
-  | `python subsubmit.py -x polar*.sh -n node91 node...`| parallel; 6 nodes | 8 |
-  | `python subsubmit.py -x polar*.sh -n node91 node...`| parallel; 8 nodes | 7 |
+	| `subsubmit.py -x polar*.sh -n node91`  | parallel; 1 node        | 36|
+  | `subsubmit.py -x polar*.sh -n node91 node...`| parallel; 2 nodes | 20|
+  | `subsubmit.py -x polar*.sh -n node91 node...`| parallel; 4 nodes | 11|
+  | `subsubmit.py -x polar*.sh -n node91 node...`| parallel; 6 nodes | 8 |
+  | `subsubmit.py -x polar*.sh -n node91 node...`| parallel; 8 nodes | 7 |
 
-	As seen above, more than 50x accelaration is obtained by using Depending on how many CPU cores your `submitting` node has, the efficiency may vary. Consulting [GNU parallel](https://www.gnu.org/software/parallel/parallel_tutorial.html) for more information.
+	As seen above, more than 50x accelaration is obtained by using both `GNU parallel` and `concurrent`. Depending on how many CPU cores your `submitting` node has, the efficiency may vary. Consulting [GNU parallel](https://www.gnu.org/software/parallel/parallel_tutorial.html) for more information.
 	
 
