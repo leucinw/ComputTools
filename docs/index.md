@@ -9,6 +9,7 @@
 * [lProbingESP](./readme/lProbingESP.md)
 * [lSplitCluster](./readme/lSplitCluster.md)
 * [lToTXYZ](./readme/lToTXYZ.md)
+* [lalignment](./readme/lalignment.md)
 * [latomtyper](./readme/latomtyper.md)
 * [lboxbuilder](./readme/lboxbuilder.md)
 * [lbuildcovalent](./readme/lbuildcovalent.md)
