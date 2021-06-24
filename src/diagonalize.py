@@ -8,7 +8,7 @@
 # find three eigenvalues from polarizability tensor 
 # calculated from Gaussian output "Exact polarizability"
 
-import sys
+import argparse
 import numpy as np
 
 def diag(gauOut):
@@ -31,4 +31,14 @@ def diag(gauOut):
     print("%30s Not found!"%gauOut)
   return
 
-diag(sys.argv[1])
+def main():
+  parser = argparse.ArgumentParser()
+  parser.add_argument('-i', dest = 'input',  nargs='+', help = "Input files: gaussian output files of polarizability calculation", required=True)  
+  args = vars(parser.parse_args())
+  inps = args["input"]
+  print("%30s%10s%10s%10s" %("Filename", "a1(A.^3)", "a2(A.^3)", "a3(A.^3)"))
+  [diag(inp) for inp in inps]
+  return
+
+if __name__ == "__main__":
+  main()
