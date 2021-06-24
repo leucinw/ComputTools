@@ -19,8 +19,8 @@ def main():
   parser = argparse.ArgumentParser()
   parser.add_argument('-i',     dest = 'input', required=True, help="input filename")  
   parser.add_argument('-o',     dest = 'output', default=None, help="output filename. Optional")
-  parser.add_argument('-it',    dest = 'inType', required=True, choices = ["xyz", "txyz", "g09", "qcout", "mol", "mol2", "psi4", "sdf", "pdb", "psi4out"], help="input file type")
-  parser.add_argument('-ot',    dest = 'outType', required=True, choices = ["xyz", "qcin", "psi4", "com", "txyz"], help="output file type")
+  parser.add_argument('-it',    dest = 'inType', required=True, choices = ["xyz", "txyz", "g09", "qcout", "mol", "mol2", "psi4", "sdf", "pdb", "psi4out", "pdb"], help="input file type")
+  parser.add_argument('-ot',    dest = 'outType', required=True, choices = ["xyz", "qcin", "psi4", "com", "txyz", "pdb"], help="output file type")
   parser.add_argument('-q',     dest = 'QM', default="HF", type=str.upper, help="QM method")
   parser.add_argument('-b',     dest = 'basis',  default = "STO-3G", help="basis function for quantum job", type=str.lower)
   parser.add_argument('-c',     dest = 'charge', default = "0", help="total charge of the whole system", type=str.lower)
@@ -85,6 +85,15 @@ def main():
       sys.exit(RED + f"File format {ti} not supported!"+ ENDC)
     subprocess.run(cmdstr,shell=True)
     return
+
+  def ToPDB(fi,fo):
+    if (ti in ["XYZ", "G09", "QCOUT", "MOL", "MOL2", "PDB", "SDF"]):
+      cmdstr = "babel -i%s %s -oxyz %s"%(ti.lower(), fi, fo)
+    else:
+      sys.exit(RED + f"File format {ti} not supported!"+ ENDC)
+    subprocess.run(cmdstr,shell=True)
+    return
+
 
   def ToTXYZ(fi,fo,at):
     # generate a temptxyz file with MM2 atom types
@@ -415,6 +424,8 @@ def main():
     ToQCHEM(fi, fo)
   elif (to == "XYZ"):
     ToXYZ(fi, fo)
+  elif (to == "PDB"):
+    ToPDB(fi, fo)
   elif (to == "TXYZ"):
     ToTXYZ(fi, fo, at)
   else:
