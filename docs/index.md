@@ -1,5 +1,6 @@
 # Table of Contents
 * [addLonePairSite](./readme/addLonePairSite.md)
+* [assignTorsion](./readme/assignTorsion.md)
 * [diagonalize](./readme/diagonalize.md)
 * [dipoleCOC2COM](./readme/dipoleCOC2COM.md)
 * [lAssignAMOEBAplusPRM](./readme/lAssignAMOEBAplusPRM.md)
