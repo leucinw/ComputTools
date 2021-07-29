@@ -5,25 +5,24 @@
 #   University of Texas at Austin  #
 #===================================
 
-import argparse
-import os,sys,time
-import subprocess
+import os
+import sys
+import time
 import numpy
+import argparse
+import subprocess
 
 # color
 RED = '\033[91m'
-GREEN = '\033[92m'
 ENDC = '\033[0m'
+GREEN = '\033[92m'
+YELLOW = '\033[93m'
 
 def main():
   parser = argparse.ArgumentParser()
   parser.add_argument('-i',     dest = 'input', required=True, help="input filename")  
   parser.add_argument('-o',     dest = 'output', default=None, help="output filename. Optional")
-  parser.add_argument('-it',    dest = 'inType', required=True, choices = ["xyz", "txyz", "g09", "qcout", "mol", "mol2", "psi4", "sdf", "pdb", "psi4out", "pdb"], help="input file type")
-  parser.add_argument('-ot',    dest = 'outType', required=True, choices = ["xyz", "qcin", "psi4", "com", "txyz", "pdb"], help="output file type")
-  parser.add_argument('-q',     dest = 'QM', default="HF", type=str.upper, help="QM method")
-  parser.add_argument('-b',     dest = 'basis',  default = "STO-3G", help="basis function for quantum job", type=str.lower)
-  parser.add_argument('-c',     dest = 'charge', default = "0", help="total charge of the whole system", type=str.lower)
+  parser.add_argument('-q',     dest = 'QM', default="HF", type=str, help="QM method")
   parser.add_argument('-c1',    dest = 'charge1', default = "0", help="total charge of the first molecule")
   parser.add_argument('-c2',    dest = 'charge2', default = "0", help="total charge of the second molecule")
   parser.add_argument('-s',     dest = 'spin', default = "1", help="total spin of the whole system")
@@ -31,13 +30,17 @@ def main():
   parser.add_argument('-s2',    dest = 'spin2', default = "1", help="total spin of the second molecule")
   parser.add_argument('-n1',    dest = 'number1', default = None, help="number of atoms of the first molecule")
   parser.add_argument('-bsse',  dest = 'bsse', default = None, help = "use bsse correction, e.g. CP")
-  parser.add_argument('-j',     dest = 'jobType', default="sp", type=str.lower, help="job type, can be opt, sp, freq, cbs, sapt, opt+freq, dipole, esp. Default: sp")
   parser.add_argument('-d',     dest = 'disk', default = "10GB", help="size of disk to be used. Default: 10GB")
   parser.add_argument('-m',     dest = 'memory', default = "10GB", help="size of memory to be used. Default: 10GB")
   parser.add_argument('-n',     dest = 'nproc', default = "8", help="number of cores for Gaussian job. Default: 8")
-  parser.add_argument('-conv',  dest = 'converge', default = " ", help="string, converge cariteria for gaussian opt job. Default: Gaussian default")
-  parser.add_argument('-at',    dest = 'atomtype', nargs='+', default = None, help="atom types for txyz file. Please provide in a row")
+  parser.add_argument('-c',     dest = 'charge', default = "0", help="total charge of the whole system", type=str.lower)
   parser.add_argument('-tp',    dest = 'template', default = None, help="template txyz file used to convert to new txyz")
+  parser.add_argument('-b',     dest = 'basis',  default = "STO-3G", help="basis function for quantum job", type=str.lower)
+  parser.add_argument('-at',    dest = 'atomtype', nargs='+', default = None, help="atom types for txyz file. Please provide in a row")
+  parser.add_argument('-ot',    dest = 'outType', required=True, choices = ["xyz", "qcin", "psi4", "com", "txyz", "pdb"], help="output file type")
+  parser.add_argument('-conv',  dest = 'converge', default = " ", help="string, converge cariteria for gaussian opt job. Default: Gaussian default")
+  parser.add_argument('-j',     dest = 'jobType', default="sp", type=str.lower, help="job type, can be opt, sp, freq, cbs, sapt, opt+freq, dipole, esp, polar. Default: sp")
+  parser.add_argument('-it',    dest = 'inType', required=True, choices = ["xyz", "txyz", "g09", "qcout", "mol", "mol2", "psi4", "sdf", "pdb", "psi4out", "pdb"], help="input file type")
   args = vars(parser.parse_args())
 
   fi = args["input"]
@@ -51,15 +54,15 @@ def main():
   if (to == "TXYZ"):
     ftxyz = fin + ".tmptxyz"
   cg = args["charge"]
-  qm = args["QM"].upper()
-  if qm == "CCSD_T":
-    qm = "CCSD(T)"
+  qm = args["QM"]
+  if qm.upper() == "CCSD_T":
+    qm = "ccsd(t)"
   bf = args["basis"]
   sp = int(args["spin"])
   jt = args["jobType"]
   dk = args["disk"]
   me = args["memory"]
-  np = args["nproc"]
+  nc = args["nproc"]
   n1 = args["number1"]
   bsse = args["bsse"]
   c1 = args["charge1"]
@@ -75,12 +78,13 @@ def main():
       cmdstr = "babel -i%s %s -oxyz %s"%(ti.lower(), fi, fo)
     elif ti == "TXYZ":
       txyz2xyz(fi,fo)
+      cmdstr=f"echo ' Converted {fi} using txyz2xyz' "
     elif ti == "PSI4OUT":
       psiout2xyz(fi,fo)
-      cmdstr="echo"
+      cmdstr=f"echo ' Converted {fi} using psiout2xyz' "
     elif ti == "PSI4":
       psi42xyz(fi,fo)
-      cmdstr="echo"
+      cmdstr=f"echo ' Converted {fi} using psi42xyz' "
     else:
       sys.exit(RED + f"File format {ti} not supported!"+ ENDC)
     subprocess.run(cmdstr,shell=True)
@@ -111,6 +115,7 @@ def main():
     # temparary solution, only for AMOEBA+ molecules!!!
     apfolder="/home/liuchw/apfolder/"
     if at != None:
+      atomtypes = []
       for a in at:
         if os.path.isfile(a):
           fname = os.path.join(os.getcwd(), a)
@@ -162,7 +167,7 @@ def main():
     # write more settings into com file
     fname, _ = os.path.splitext(fo)
     chk   = "%chk=" + fname + ".chk\n"
-    nproc = "%Nproc="+np + "\n" 
+    nproc = "%Nproc="+nc + "\n" 
     mem   = "%Mem="+me +"\n"
     
     if (jt.upper() == "OPT"):
@@ -257,7 +262,7 @@ def main():
         fout.write("units angstrom\nno_reorient\n")
         fout.write("symmetry c1\n}\n\n")
 
-        if (qm == "HF"):
+        if (qm.upper() == "HF"):
           if jt.upper() == "OPT":
             fout.write("set OPT_COORDINATES CARTESIAN\n")
             fout.write("set G_CONVERGENCE GAU\n")
@@ -271,7 +276,7 @@ def main():
           else:
             sys.exit(RED + "HF with %s is not supported!"%jt.upper() + ENDC)
 
-        elif (qm == "MP2") or (qm == "MP2D"):
+        elif (qm.upper() == "MP2") or (qm.upper() == "MP2D"):
           fout.write("set {\nscf_type DF\n")
           fout.write("mp2_type DF\ne_convergence 7\nreference rhf\n}\n\n")
           if jt.upper() == "CBS": 
@@ -311,7 +316,7 @@ def main():
           else:
             sys.exit(RED + "MP2 with %s is not supported!"%jt.upper() + ENDC)
 
-        elif qm == "CCSD(T)":
+        elif qm.upper() == "CCSD(T)":
           fout.write("set {\nscf_type DF\n")
           fout.write("mp2_type DF\ne_convergence 7\nreference rhf\n}\n\n")
           if jt.upper() == "CBS":
@@ -328,16 +333,11 @@ def main():
             else:
               fout.write("energy('ccsd(t)/%s', bsse_type='%s')\n"%(bf, bsse))
               print(GREEN + f"{fo} file generated!" + ENDC)
-        else: 
-          fout.write("e_convergence 7\nreference rhf\n\n\n")
-          if jt.upper() == "SP":
-            if not bsse:
-              fout.write("energy('%s/%s')\n"%(qm,bf))
-              print(GREEN + f"{fo} file generated!" + ENDC)
-            else:
-              fout.write("energy('%s/%s', bsse_type='%s')\n"%(qm,bf, bsse))
-              print(GREEN + f"{fo} file generated!" + ENDC)
+        else:
+          if jt.upper() not in ["SAPT", "DIPOLE", "POLAR"]:
+            sys.exit(RED + f"Error: {qm} not supported for {jt} calculations" + ENDC)
 
+        # separate settings for SAPT, DIPOLE and POLAR
         if jt.upper() == "SAPT":
           fout.write("set {\nscf_type DF\n")
           fout.write("e_convergence 7\nreference rhf\n")
@@ -346,9 +346,16 @@ def main():
           fout.write("guess SAD\n}\n")
           fout.write("energy('sapt2+')\n")
           print(GREEN + f"{fo} file generated!" + ENDC)
+
         if jt.upper() == "DIPOLE":
           fout.write('set PROPERTIES_ORIGIN ["COM"]\n')
-          fout.write("properties('PBE0/%s', properties=['dipole'], title='Acetate')\n"%bf)
+          fout.write("properties('PBE0/%s', properties=['dipole'], title='dipole_calculation')\n"%bf)
+          print(GREEN + f"{fo} file generated!" + ENDC)
+        
+        if jt.upper() == "POLAR":
+          fout.write("set {\nbasis %s\n"%bf)
+          fout.write("}\n\n")
+          fout.write(f"properties('{qm}', properties=['polarizability'], title='{fin}_ccsd_polarizability')\n")
           print(GREEN + f"{fo} file generated!" + ENDC)
       return
 
@@ -408,10 +415,10 @@ def main():
     return
           
   def txyz2xyz(finp, fout):
-    atoms = np.loadtxt(finp, usecols=(1,), dtype="str", unpack=True,skiprows=1)
-    xs,ys,zs = np.loadtxt(finp, usecols=(2,3,4), dtype="float", unpack=True,skiprows=1)
+    atoms = numpy.loadtxt(finp, usecols=(1,), dtype="str", unpack=True,skiprows=1)
+    xs,ys,zs = numpy.loadtxt(finp, usecols=(2,3,4), dtype="float", unpack=True,skiprows=1)
     with open(fout, "w") as f:
-      f.write("%3s\nconverted from %s\n"%(len(atoms), finp))
+      f.write("%3s\nconverted from %s\n"%(len(atoms), fi))
       for atom,x,y,z in zip(atoms,xs,ys,zs):
         f.write("%3s%12.6f%12.6f%12.6f\n"%(atom, x, y, z))
     return
