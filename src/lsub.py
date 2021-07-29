@@ -8,19 +8,18 @@
 import os
 import sys
 import time
-import subprocess
 import argparse
+import subprocess
 import numpy as np
 import concurrent.futures 
 from datetime import datetime
 
-'''check the availability of ONE node'''
-def checkone(node):
+def checkNode(node):
   njobs = 0
-  exelist = ["psi4","g09","g16","dynamic.x","cp2k.ssmp","mpirun_qchem","orca_mp2_mpi","gmx_mpi","gmx"]
+  exelist = ["psi4","g09", "g16", ".exe", "dynamic.x","cp2k.ssmp","mpirun_qchem","orca_mp2_mpi","gmx_mpi","gmx"]
   try:
-    topstr = subprocess.check_output(f"ssh {node} 'top -n1 -b' 2>err", shell=True).decode("utf-8")
-    line = ''.join(list(topstr))
+    topstr = subprocess.check_output(f"ssh {node} 'top -n1 -b' | head -n30 2>/dev/null", shell=True).decode("utf-8")
+    line = ''.join(list(topstr.split()))
     for exe in exelist:
       njobs += line.count(exe)
   except:
@@ -28,13 +27,14 @@ def checkone(node):
     pass
   return node,njobs
 
-'''check the availability of ALL node'''
+'''check the availability of ALL nodes concurrently;
+  return the number of running jobs '''
 def checkNodes(nodes):
   now = datetime.now().strftime("%b %d %Y %H:%M:%S")
   print('\033[91m' + "[" + now + "] " + "checking availability of renlab clusters..." + '\033[0m')
   nodejobs = []
   with concurrent.futures.ProcessPoolExecutor() as executor:
-    results = [executor.submit(checkone, node) for node in nodes]
+    results = [executor.submit(checkNode, node) for node in nodes]
     for f in concurrent.futures.as_completed(results):
       nodejobs.append(f.result())
   return nodejobs 
@@ -62,15 +62,15 @@ def subOneJob(node,qmfile):
   ext = ext.upper()
   if ext == ".COM":
     srcfile = "/home/liuchw/.bashrc.G09"
-    exestr = "nohup g09 %s.com %s.log >log.sub 2>err.sub &"%(f, f)
+    exestr = "nohup g09 %s.com %s.log >log.sub &"%(f, f)
     cmdstr = 'ssh %s "source %s; cd %s; %s" &' % (node, srcfile, cwd, exestr)
   elif ext == ".PSI4":
-    srcfile = "/home/liuchw/.bashrc.psi4"
-    exestr = "nohup psi4 -n 8 -i %s.psi4 -o %s.log >log.sub 2>err.sub &"%(f, f)
+    srcfile = "/home/liuchw/.bashrc.poltype"
+    exestr = "nohup psi4 -n 8 -i %s.psi4 -o %s.log >log.sub &"%(f, f)
     cmdstr = 'ssh %s "source %s; cd %s; %s" &' % (node, srcfile, cwd, exestr)
   elif ext == ".QCHEM":
     srcfile = "/home/liuchw/.bashrc.qchem"
-    exestr = "nohup qchem -nt 8 %s.qchem %s.log >log.sub 2>err.sub &"%(f, f)
+    exestr = "nohup qchem -nt 8 %s.qchem %s.log >log.sub &"%(f, f)
     cmdstr = 'ssh %s "source %s; cd %s; %s" &' % (node, srcfile, cwd, exestr)
   else:
     cmdstr = "echo 'file format %s not supported!'"%ext
@@ -129,7 +129,15 @@ def main():
       if (idlenodes == []):
         time.sleep(tcheck)
       else:
-        for node in idlenodes:
+        sortedidlenodes = []
+        while idlenodes != []:
+          tmp = []
+          for n in idlenodes:
+            if n not in tmp:
+              tmp.append(n)
+              idlenodes.remove(n)
+          sortedidlenodes += tmp    
+        for node in sortedidlenodes:
           if (jobidx == len(qmfiles)):
             break
           subOneJob(node, qmfiles[jobidx])
@@ -143,7 +151,5 @@ def main():
     print('\033[91m' + "Outputs already exist for your inputs!!" + '\033[0m')
   return
 
-if len(sys.argv) == 1:
-  print('\033[93m' + " please use '-h' option to see usage" + '\033[0m')
-else:
+if __name__ == "__main__":
   main()
