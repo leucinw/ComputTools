@@ -2,12 +2,12 @@
 
 * Source:
 
- 	[click here](https://github.com/leucinw/ComputTools/tree/master/src/latomtyper.py)
+ 	[click here](https://github.com/leucinw/ComputTools/tree/master/src/latomTyper.py)
 
 * Usage:
 	
 	```shell
-	python latomtyper.py xyz key index
+	python latomtyper.py -xyz XYZ -prm PRM -idx IDX [-fun {AMOEBA,AMOEBAPLUS}] 
 	```
 
 * Intro:
