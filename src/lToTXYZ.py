@@ -97,8 +97,12 @@ def babel(fi):
   elif ti == "PSI4OUT":
     psiout2xyz(fi, fxyz)
     cmdstr = f"babel -ixyz {fxyz} -o{ot} {fo}"
+  elif ti == "TXYZ":
+    pass
+    cmdstr = 'echo "using the txyz file provided "'
   else:
     sys.exit(RED + f"File format {ti} not supported!"+ ENDC)
+  
   print(GREEN + f"Running {cmdstr}" +ENDC)
   os.system(cmdstr)
  
@@ -170,7 +174,7 @@ def ToTXYZ(fi, types):
 def main():
   parser = argparse.ArgumentParser()
   parser.add_argument('-i', dest = 'inp', required=True, help="input filename")  
-  parser.add_argument('-t', dest = 'typ', required=True, choices = ["xyz", "g09", "qcout", "mol", "mol2", "psi4", "sdf", "pdb", "psi4out"])
+  parser.add_argument('-t', dest = 'typ', required=True, choices = ["xyz", "g09", "qcout", "mol", "mol2", "psi4", "sdf", "pdb", "psi4out", "txyz"])
   args = vars(parser.parse_args())
   global ti,ftxyz,fmm2,fmna
   fi = args["inp"]
