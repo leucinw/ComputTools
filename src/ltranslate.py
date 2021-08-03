@@ -14,13 +14,28 @@ def main():
   parser.add_argument('-p1',  dest = "points1", nargs='+', required=True) 
   parser.add_argument('-p2',  dest = "points2", nargs='+', required=True) 
   parser.add_argument('-n1',  dest = 'nfirst', required=True)
-  parser.add_argument('-d',   dest = 'distance', default=1.0)
+  parser.add_argument('-d',   dest = 'dist_real', default=None)
+  parser.add_argument('-r',   dest = 'dist_ratio', default=None)
   args = vars(parser.parse_args())
   xyzfile = args["xyzfile"]
   n1 = int(args["nfirst"])
   p1 = args["points1"]
   p2 = args["points2"]
-  dist_ratio = float(args["distance"])
+  use_ratio = False
+  use_real = False
+  if args["dist_ratio"] != None:
+    dist_ratio = float(args["dist_ratio"])
+    use_ratio = True
+  if args["dist_real"] != None:
+    dist_real = float(args["dist_real"])
+    use_real = True
+  
+  if (use_ratio and not use_real):
+    pass
+  elif (use_real and not use_ratio):
+    pass
+  else:
+    sys.exit("Error: distance must be provided either via ratio or real distance")
 
   # read atoms and coordinate from xyz file
   def readXYZ(xyz):
@@ -57,6 +72,10 @@ def main():
   geocent_2 = geomCenter(refCoord_2)
 
   geocent_dist = distance(geocent_1, geocent_2)
+  
+  if use_real:
+    dist_ratio = dist_real/geocent_dist
+
   geocent_vector = [geocent_2[0]- geocent_1[0], 
                     geocent_2[1]- geocent_1[1], 
                     geocent_2[2]- geocent_1[2],]
