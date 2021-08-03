@@ -38,7 +38,6 @@ def main():
   parser.add_argument('-b',     dest = 'basis',  default = "STO-3G", help="basis function for quantum job", type=str.lower)
   parser.add_argument('-at',    dest = 'atomtype', nargs='+', default = None, help="atom types for txyz file. Please provide in a row")
   parser.add_argument('-ot',    dest = 'outType', required=True, choices = ["xyz", "qcin", "psi4", "com", "txyz", "pdb"], help="output file type")
-  parser.add_argument('-conv',  dest = 'converge', default = " ", help="string, converge cariteria for gaussian opt job. Default: Gaussian default")
   parser.add_argument('-j',     dest = 'jobType', default="sp", type=str.lower, help="job type, can be opt, sp, freq, cbs, sapt, opt+freq, dipole, esp, polar. Default: sp")
   parser.add_argument('-it',    dest = 'inType', required=True, choices = ["xyz", "txyz", "g09", "qcout", "mol", "mol2", "psi4", "sdf", "pdb", "psi4out", "pdb"], help="input file type")
   args = vars(parser.parse_args())
@@ -71,7 +70,6 @@ def main():
   s2 = args["spin2"]
   at = args["atomtype"]
   tp = args["template"]
-  con = args["converge"]
 
   def ToXYZ(fi,fo):
     if (ti in ["XYZ", "G09", "QCOUT", "MOL", "MOL2", "PDB", "SDF"]):
