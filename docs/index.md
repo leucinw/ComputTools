@@ -9,7 +9,6 @@
 * [lForceBalancePrep](./readme/lForceBalancePrep.md)
 * [lGaussianJobRepair](./readme/lGaussianJobRepair.md)
 * [lProbingESP](./readme/lProbingESP.md)
-* [lSplitCluster](./readme/lSplitCluster.md)
 * [lToTXYZ](./readme/lToTXYZ.md)
 * [lValanceRelaxation](./readme/lValanceRelaxation.md)
 * [lalignment](./readme/lalignment.md)
