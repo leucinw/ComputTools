@@ -9,6 +9,7 @@ import os
 import sys
 import argparse
 import numpy as np
+import networkx as nx
 
 ''' split the pdb into pdbs '''
 def splitpdb(pdb):
@@ -77,6 +78,40 @@ def combinepdbs():
   os.remove("pdblist")
   return
 
+''' split a txyz file to monomers '''
+def splittxyz(txyz):
+  g = nx.Graph()
+  nodes = []
+  edges = []
+  atom_line = {}
+  lines = open(txyz).readlines()
+  for line in lines[1:]:
+    d = line.split()
+    atom_line[int(d[0])] = line
+    if d[0] not in nodes: 
+      nodes.append(int(d[0]))
+    for c in d[6:]:
+      s = sorted([int(d[0]), int(c)])
+      if s not in edges:
+        edges.append(s)
+  
+  g.add_nodes_from(nodes)
+  g.add_edges_from(edges)
+        
+  monomers = nx.connected_components(g)
+  monoid = 0
+  for m in monomers:
+    atoms = sorted(list(m))
+    mononame = f"mono_{monoid:04d}.txyz"
+    with open(mononame, 'w') as f:
+      f.write(f"{len(atoms):>5d}\n")
+      for a in atoms:
+        f.write(atom_line[a])
+    nicertxyz(mononame)
+    os.system(f"mv {mononame}_2 {mononame}")
+    monoid += 1
+  return
+
 ''' write a nicer txyz file '''
 def nicertxyz(txyz):
   lines = open(txyz).readlines()[1:] 
@@ -99,17 +134,17 @@ def nicertxyz(txyz):
     tmp = []
     f.write(f"{len(atoms):>6d}\n\n")
     for i in range(len(atoms)):
-      if i not in tmp:
+      if atoms[i] not in tmp:
         f.write(f"{elements[i]:>3s}{coords[i][0]:>14.6f}{coords[i][1]:>14.6f}{coords[i][2]:>14.6f}\n")
-        tmp.append(i)
+        tmp.append(atoms[i])
         newtypes.append(types[i])
       for c in connections[i]:
         if atom_element[c].upper() == "H":
-          j = int(c) - 1
+          j = atoms.index(c) 
           if j not in tmp:
             f.write(f"{elements[j]:>3s}{coords[j][0]:>14.6f}{coords[j][1]:>14.6f}{coords[j][2]:>14.6f}\n")
             newtypes.append(types[j])
-            tmp.append(j)
+            tmp.append(c)
   os.system("babel tmp.xyz tmp.txyz 2>/dev/null")
   lines = open("tmp.txyz").readlines()[1:]
   with open(txyz + "_2", 'w') as f:
@@ -136,15 +171,19 @@ def main():
   mode = args["mode"]
   if inp.endswith(".pdb"):
     if mode == "SPLIT":
-      print("Splitting PDB file")
+      print(f"Splitting PDB file: {inp}")
       splitpdb(inp)
     else:
       print("Splitting and Combining PDB file(s)")
       splitpdb(inp)
       combinepdbs()
   elif (inp.endswith(".xyz") or inp.endswith(".txyz")):
-    print("Writting a nicer tinker xyz file")
-    nicertxyz(inp)
+    if mode == "SPLIT":
+      print(f"Splitting tinker xyz file: {inp}")
+      splittxyz(inp)
+    else:
+      print("Writting a nicer tinker xyz file")
+      nicertxyz(inp)
   else:
     sys.exit("Error: only PDB and Tinker XYZ files are supported")
   return
