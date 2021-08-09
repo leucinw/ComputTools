@@ -10,72 +10,81 @@ import sys
 import argparse
 import numpy as np
 
-# color
 RED = '\33[91m'
 GREEN = '\33[92m'
 ENDC = '\033[0m'
 
-# read atoms and coordinate from txyz file
 def readTXYZ(txyz):
   atoms  = np.loadtxt(txyz, usecols=(1,), dtype='str', unpack=True, skiprows=1)
   coords = np.loadtxt(txyz, usecols=(2,3,4), dtype='float', unpack=False, skiprows=1)
   return atoms,coords
 
-# calculate distance between two atoms 
 def distance(coord1, coord2):
   return np.sqrt(np.square(np.array(coord1)-np.array(coord2)).sum()) 
 
-def writeCOM(atoms, coords, fname):
+def psi4ESP():
+  fname = f"{prefix}.psi4"
+  atoms,coords = readTXYZ(txyz)
   with open(fname,"w") as f:
-    nproc = "%Nproc=8\n" 
-    memory = "%Mem=50GB\n"
-    chk = "%Chk=" + "%s\n"%fname.replace(".com", ".chk")
-    keywords = "#p MP2/aug-cc-pvtz SP Density=MP2 SCF=Save Charge NoSymm MaxDisk=100GB \n"
-    comment = "SP job with an external charge\n"
+    f.write("import shutil\n\n")
     chgspin = f" {charge} 1  \n"
-    f.write(chk + memory + nproc + keywords + "\n" + comment + "\n" + chgspin)
+    f.write("molecule {\n")
+    f.write(chgspin)
     for atom, coord in zip(atoms, coords):
       f.write("%3s %10.6f%10.6f%10.6f\n"%(atom, coord[0], coord[1], coord[2]))
+    f.write("units angstrom\n")
+    f.write("no_reorient\n")
+    f.write("symmetry c1\n}\n\n")
+    f.write("memory 48GB\n") 
+    f.write("set_num_threads(8)\n")
+    f.write("set maxiter 300\n")
+    f.write("set freeze_core True\n")
+    f.write('set PROPERTIES_ORIGIN ["COM"]\n\n')
+    f.write("E, wfn = properties('MP2/aug-cc-pVTZ', properties=['GRID_ESP'], return_wfn=True)\n")
+    f.write(f'fchk(wfn, "{prefix}.fchk")\n')
+    f.write(f"wfn.to_file('{prefix}.npy')\n")
+    f.write(f'shutil.move("grid_esp.dat", "{prefix}.grid_esp.dat")\n')
+    f.write("clean()\n")
   return
 
-# get ESP values
-def getQMESP(fname):
-  QMfinished = False
-  log = prefix + ".log"
-  if os.path.isfile(log):
-    for line in open(log).readlines():
-      if "Normal termination" in line:
-        QMfinished = True
-
-  if (not os.path.isfile(f"{prefix}.fchk")) and QMfinished:
-    cmdstr = f"{gaudir}/formchk {prefix}.chk"
-    os.system(cmdstr)
-  if (not os.path.isfile(f"{prefix}.cube")) and QMfinished:
-    cmdstr = f"{gaudir}/cubegen 0 potential=MP2 {prefix}.fchk {prefix}.cube -5 h < {prefix}.grid"
-    os.system(cmdstr)
-  if (not os.path.isfile(f"{prefix}.pot")) and QMfinished:
-    cmdstr = f"{tinkerdir}/potential.x 2 {prefix}.cube"
-    os.system(cmdstr)
-   
-  # get pot for new grid from -esp.fchk
-
-  name = fname + "-esp_" + prefix.split("_")[-1]
-  cmdstr = f"{gaudir}/cubegen 0 potential=MP2 {fname}-esp.fchk {name}.cube -5 h < {prefix}.grid"
-  os.system(cmdstr)
-  
-  cmdstr = f"{tinkerdir}/potential.x 2 {name}.cube "
-  os.system(cmdstr)
-  
-  qmpol = np.loadtxt(prefix + ".pot", usecols=(-1), unpack=True, skiprows=1)
-  qmref = np.loadtxt(name + ".pot", usecols=(-1), unpack=True, skiprows=1)
-  np.savetxt(prefix + "_qm_polarization.pot", qmpol-qmref, fmt='%15.4f')
+def psi4ESP_prob(atoms, coords, ff, probcoord):
+  fname = ff + ".psi4"
+  with open(fname,"w") as f:
+    f.write("import shutil\n\n")
+    chgspin = f" {charge} 1"
+    f.write("molecule {\n")
+    f.write(chgspin + "\n")
+    for atom, coord in zip(atoms, coords):
+      f.write("%3s %10.6f%10.6f%10.6f\n"%(atom, coord[0], coord[1], coord[2]))
+    f.write("units angstrom\n")
+    f.write("no_reorient\n")
+    f.write("symmetry c1\n}\n\n")
+    f.write("memory 48GB\n") 
+    f.write("set_num_threads(8)\n")
+    f.write("set maxiter 300\n")
+    f.write("set freeze_core True\n")
+    f.write('set PROPERTIES_ORIGIN ["COM"]\n\n')
+    f.write("Chrgfield = QMMM()\n")
+    c = probcoord
+    f.write("Chrgfield.extern.addCharge(0.125000,%10.6f,%10.6f,%10.6f)\n"%(c[0], c[1], c[2]))
+    f.write("psi4.set_global_option_python('EXTERN', Chrgfield.extern)\n")
+    f.write("E, wfn = properties('MP2/aug-cc-pVTZ', properties=['GRID_ESP'], return_wfn=True)\n")
+    f.write(f'fchk(wfn, "{ff}.fchk")\n')
+    f.write(f"wfn.to_file('{ff}.npy')\n\n")
+    f.write(f'shutil.move("grid_esp.dat", "{ff}.grid_esp.dat")\n')
+    f.write("clean()\n")
   return
-    
-def generate(d):
+
+def oneProbe(ff, probatoms):
   atoms, coords = readTXYZ(txyz)
   vector = np.zeros(3)
   lines = open(txyz).readlines()
+  
+  patom = []
+  for p in probatoms.split():
+    patom.append(int(p))
 
+  perpend = False 
   if not perpend:
     for j in range(1,len(patom)):
       vector += (coords[patom[0]-1] - coords[patom[j]-1])
@@ -88,121 +97,132 @@ def generate(d):
       sys.exit(RED + "Error: two atoms are needed to determine the direction of the probe" + ENDC)
   
   vector = vector/np.linalg.norm(vector)
-  v = coords[patom[0]-1] + d*vector
-  fname = prefix + ".com" 
-  writeCOM(atoms, coords, fname)
-  with open(fname, "a") as f:
-    f.write("\n")
-    f.write(" %10.6f%10.6f%10.6f%6.3f\n\n"%(v[0], v[1], v[2], 0.01))
-    print(GREEN + "Generated %s"%fname + ENDC)
-  fname = prefix + ".xyz"
+  v = coords[patom[0]-1] + dist*vector
+  psi4ESP_prob(atoms, coords, ff, v)
+  fname = ff + ".xyz"
   with open(fname, "w") as f:
     f.write("  %4s\n"%(len(atoms)+1))
     for line in lines[1:]:
       f.write(line)
     f.write("  %4s%3s  %12.6f%12.6f%12.6f      999\n"%(len(atoms)+1, "X", v[0], v[1], v[2]))
     print(GREEN + "Generated %s"%fname + ENDC)
+  
+  lines = open(f"{prefix}.key").readlines()
+  fname = ff + ".key"
+  with open(fname, "w") as f:
+    for line in lines:
+      f.write(line)
+    f.write("# ESP probe parameters\n")
+    f.write('atom          999    999   PC     "Probe Charge        "         1     1.000    0\n')
+    f.write("vdw       999  0.0100   0.0000\n")
+    f.write("multipole   999                         0.12500\n")
+    f.write("                                        0.00000    0.00000    0.00000\n")
+    f.write("                                        0.00000\n")
+    f.write("                                        0.00000    0.00000\n")
+    f.write("                                        0.00000    0.00000    0.00000\n")
+    f.write("polarize           999          0.0000     0.0100\n")
+    print(GREEN + "Generated %s"%fname + ENDC)
   return
 
-# get ESP values
-def getMMESP(fname):
-  if os.path.isfile("../final.key"):
-    lines = open("../final.key").readlines()
-    with open(f"{prefix}.key_0", 'w') as f:
-      for line in lines:
-        if 'polarize ' in line:
-          d = line.split()
-          line = '  '.join(d[0:2] + ['0.000'] + d[3:]) + '\n'
-        else:
-          line = line
-        f.write(line)
 
-      # write Probe
-      f.write('atom 999 999 X "Probe Charge " 1 1.000 0\n')
-      f.write('vdw 999 0.01 0.000\n')
-      f.write('multipole 999 0.125\n')
-      f.write('              0.000 0.000 0.000\n')
-      f.write('              0.000\n')
-      f.write('              0.000 0.000\n')
-      f.write('              0.000 0.000 0.000\n')
-  else:
-    sys.exit("final.key does not exist")
-  cmdstr = f"{tinkerdir}/potential.x 3 {prefix}.xyz -k {prefix}.key_0 Y > /dev/null "
-  os.system(cmdstr)
+def multipleProbes():
+  root = os.getcwd()
+  atoms, elements, atypes = np.loadtxt(f"{prefix}.xyz", usecols=(0,1,5), dtype='str', skiprows=1, unpack=True)
+  atom_element_dict = dict(zip(atoms,elements))
+  connections = []
+  for line in open(f"{prefix}.xyz").readlines()[1:]:
+    d = line.split()
+    connections.append(d[6:])
   
-  lines = open(f"{prefix}.pot").readlines()
-  return 
+  tmp = []
+  probes = []
+  for a,e,t,c in zip(atoms,elements,atypes,connections):
+    patom = c[0] 
+    for cc in c:
+      if t not in tmp:
+        tmp.append(t)
+        if atom_element_dict[cc] != "H":
+          patom = cc
+        fname = f"{prefix}_{e}{a}"
+        probatoms = f"{a} {patom}"
+        oneProbe(fname,probatoms)
+        os.system(f"mkdir {e}{a}")
+        os.system(f"mv {fname}* ./{e}{a}")
+        os.system(f"ln -s {os.getcwd()}/{prefix}.grid ./{e}{a}/grid.dat")
+        probes.append(fname)
+  
+  with open("probes", "w") as f:
+    for p in probes:
+      f.write(p + "\n")
+  return
 
-# get ESP values
-def getMMGRID(fname):
-  if os.path.isfile("../final.key"):
-    lines = open("../final.key").readlines()
-    with open(f"{prefix}.key_0", 'w') as f:
-      for line in lines:
-        if 'polarize ' in line:
-          d = line.split()
-          line = '  '.join(d[0:2] + ['0.000'] + d[3:]) + '\n'
-        else:
-          line = line
-        f.write(line)
-
-      # write Probe
-      f.write('atom 999 999 X "Probe Charge " 1 1.000 0\n')
-      f.write('vdw 999 0.01 0.000\n')
-      f.write('multipole 999 0.125\n')
-      f.write('              0.000 0.000 0.000\n')
-      f.write('              0.000\n')
-      f.write('              0.000 0.000\n')
-      f.write('              0.000 0.000 0.000\n')
-  else:
-    sys.exit("final.key does not exist")
-  cmdstr = f"{tinkerdir}/potential.x 1 {prefix}.xyz -k {prefix}.key_0 "
+def getGridESP():
+  cmdstr = f"{tinkerdir}/potential.x 1 {prefix}.xyz -k {prefix}.key 2>/dev/null"
+  os.system(cmdstr)
+  cmdstr = f"{tinkerdir}/potential.x 3 {prefix}.xyz -k {prefix}.key Y  2>/dev/null"
   os.system(cmdstr)
   return 
-  
+
+def getPolarESP():
+  lines = open("probes").readlines()
+  currdir = os.getcwd()
+  for line in lines: 
+    pre = line.split("_")[0]
+    d = line.split("_")[-1].split("\n")[0]
+    ff = line.split("\n")[0]
+    pr = np.loadtxt("%s/%s.grid_esp.dat"%(d,ff))
+    rf = np.loadtxt(f"{pre}.grid_esp.dat")
+    xs,ys,zs = np.loadtxt("grid.dat", usecols=(0,1,2), unpack=True)
+    hartree2kcal = 627.509
+    with open("qm_polarization.pot", "w") as f:
+      f.write(f"{len(pr):>10d} qm_polarization\n")
+      for i in range(len(pr)):
+        f.write("%10s%14.6f%14.6f%14.6f%14.6f\n"%(i+1, xs[i], ys[i], zs[i], hartree2kcal*(pr[i]-rf[i])))
+    os.system(f"mv qm_polarization.pot ./{d}")
+  return
+
 def main():
   if len(sys.argv) == 1:
     sys.exit(RED + "run with -h option to see the usage"+ ENDC)
   
   parser = argparse.ArgumentParser()
   parser.add_argument('-i', dest = 'txyz', required=True, help="tinker xyz file not containing the probe ion")  
+  parser.add_argument('-k', dest = 'key', required=True, help="tinker keyfile without probe ion")  
   parser.add_argument('-m', dest = 'mode', required=False, help="0: generating com/xyz files; 1:postprocessing", type=int, default=0)  
   parser.add_argument('-c', dest = 'charge', required=True, help="total charge of the system, not including probe charge")  
-  parser.add_argument('-f', dest = 'prefix', required=True, help="prefix of generated filename")  
-  parser.add_argument('-p', dest = "prob_atom", nargs='+', required=True, type=int, help="probe atom followed by directional atoms, e.g. 1 2 3: use bisector of 1-2 and 1-3") 
-  parser.add_argument('-d', dest = 'distance', required=True, type=float, help="distance from the probing atom, e.g. 3 4 5: three distances at 3, 4 and 5 A")
-  parser.add_argument('-a', dest = 'adaptingdistance', type=int, help="adapting distance for potential comparison purpose", default=0)
+  parser.add_argument('-f', dest = 'prefix', required=True, help="prefix of probe filename")  
+  parser.add_argument('-d', dest = 'distance', required=True, type=float, help="distance from the probing atom")
   args = vars(parser.parse_args())
-  global gaudir,tinkerdir,txyz
-  global prefix,charge,adapt
-  global perpend,patom
-  gaudir = "/opt/g09gh/gaussian/g09"
+  global gaudir,tinkerdir,txyz,key
+  global prefix,charge,dist
   tinkerdir = "$TINKER89"
   txyz = args["txyz"]
+  key = args["key"]
   mode  = args["mode"] 
   charge = args["charge"]
   prefix = args["prefix"]
-  patom = args["prob_atom"]
   dist  = args["distance"]
-  adapt  = args["adaptingdistance"]
 
-  perpend = False
-  for p in patom[1:]:
-    if p < 0:
-      perpend = True
-      break
-  
-  fname = txyz.split(".")[0]
   # generating mode
   if mode == 0:
-    generate(dist)
-    getMMGRID(fname)
+    fname = txyz.split(".")[0]
+    if fname != prefix:
+      os.system(f"ln -s {txyz} {prefix}.xyz")
+    fname = key.split(".")[0]
+    if fname != prefix:
+      os.system(f"ln -s {key} {prefix}.key")
+    if not os.path.isfile(f"{prefix}.psi4"):
+      psi4ESP()
+    if not os.path.isfile(f"{prefix}.pot"):
+      getGridESP()
+      os.system(f"ln -s {prefix}.grid grid.dat")
+    multipleProbes()
   
   # postprocessing mode
   elif mode == 1:
-    getQMESP(fname)
+    getPolarESP()
   else:
-    sys.exit(RED + "Error: only mode 0 and 1 are supported" + ENDC)
+    sys.exit(RED + "Error: either 0 or 1" + ENDC)
       
   return 
 
