@@ -7,9 +7,9 @@
 * Usage:
 
   ```shell
-  python lProbingESP.py -i TXYZ -p PROB_ATOM [PROB_ATOM ...] -d DISTANCE [DISTANCE ...] probe
+  python lProbingESP.py -i TXYZ -k KEY -c CHARGE [-m MODE] -f PREFIX -d DISTANCE 
   ```
 
 * Intro:
 
-  This program is used to generate QM and tinker files for ESP probing. Probes can be an ion or a point charge. 
+  This program is used to generate QM and tinker files for ESP probing in order to fit atomic polarizability.

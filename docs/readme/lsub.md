@@ -7,7 +7,7 @@
 * Usage:
 
 	```shell
-	python lsub.py -i INPUT [INPUT ...] [-n NODES [NODES ...]] [-x XNODES [XNODES ...]] [-d DISK] [-m MEMORY] [-M MAXMEM] [-t TCHECK]
+	python lsub.py -i INPUT [INPUT ...] [-n NODES [NODES ...]] [-x XNODES [XNODES ...]] [-d DISK] [-m MEMORY] [-M MAXMEM] [-t TCHECK] [-p SUBPATH]
 	```
 
 * Intro:
