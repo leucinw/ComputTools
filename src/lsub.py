@@ -59,6 +59,8 @@ def prepare(flistin, scratch=300, memory=30, maxmem=999):
 def subOneJob(node,qmfile):
   f, ext = os.path.splitext(qmfile)
   cwd = os.getcwd()
+  if subpath != None:
+    cwd = os.path.join(cwd, subpath)
   ext = ext.upper()
   if ext == ".COM":
     srcfile = "/home/liuchw/.bashrc.G09"
@@ -86,7 +88,10 @@ def main():
   parser.add_argument('-m', dest = 'memory', type =int, help = "Memory lower bound. Default: 30 (GB)", default=30)  
   parser.add_argument('-M', dest = 'maxmem', type =int, help = "Memory upper bound. Default: 999 (GB)", default=999)  
   parser.add_argument('-t', dest = 'tcheck',type=float, help = "Time interval to check node availability (in Second)", default=30.0)  
+  parser.add_argument('-p', dest = 'subpath', type=str, help = "Subfolder (optional)", default=None)  
   args = vars(parser.parse_args())
+
+  global subpath
   inps = args["input"]
   nodes = args["nodes"]
   xnodes = args["xnodes"]
@@ -94,6 +99,7 @@ def main():
   memory = args["memory"] 
   maxmem = args["maxmem"] 
   tcheck = args["tcheck"] 
+  subpath= args["subpath"] 
 
   # prepare flist, nlist
   if (nodes == []):
