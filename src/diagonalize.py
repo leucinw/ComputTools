@@ -36,6 +36,8 @@ def diag(output,filetype):
     d = lines[idx+2].split()
     x3 = [float(d[1]), float(d[2]), float(d[3])]
 
+  RED = '\033[91m'
+  ENDC = '\033[0m'
   if (x1 != []) and (x2 != []) and (x3 != []):
     a = np.array([x1,x2,x3])
     a = a * bohr2angstrom**3.0
@@ -43,7 +45,7 @@ def diag(output,filetype):
     eigvals.sort()
     print("%30s%10.4f%10.4f%10.4f"%(output, eigvals[0], eigvals[1], eigvals[2]))
   else:
-    print("%30s Not found!"%output)
+    print(RED + "%30s   Polarizability tensor not found"%output + ENDC)
   return
 
 def main():
