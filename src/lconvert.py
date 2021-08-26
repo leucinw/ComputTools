@@ -361,12 +361,12 @@ def main():
       cmdstr = "cp %s %s"%(fi, fxyz)
     elif ti == "PSI4OUT":
       psiout2xyz(fi, fxyz)
-    elif (ti in ["COM", "G09", "QCOUT", "MOL", "MOL2", "PDB", "SDF"]):
+    elif (ti in ["COM", "G09", "QCOUT", "MOL", "MOL2", "PDB", "SDF", "TXYZ"]):
       cmdstr = "babel -i%s %s -oxyz %s"%(ti.lower(), fi, fxyz)
     elif ti == "TXYZ":
       txyz2xyz(fi, fxyz)
     else:
-      sys.exit(RED + f"File format {ti} not supported!"+ ENDC)
+      cmdstr = "echo 'File format {ti} not supported!'"
     subprocess.run(cmdstr,shell=True)
 
     # convert tempxyz to psi4
