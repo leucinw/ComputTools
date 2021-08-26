@@ -40,7 +40,10 @@ def psi4ESP():
     f.write("set maxiter 300\n")
     f.write("set freeze_core True\n")
     f.write('set PROPERTIES_ORIGIN ["COM"]\n\n')
-    f.write("E, wfn = properties('MP2/aug-cc-pVTZ', properties=['GRID_ESP'], return_wfn=True)\n")
+    if "I" not in atoms:
+      f.write("E, wfn = properties('MP2/aug-cc-pVTZ', properties=['GRID_ESP'], return_wfn=True)\n")
+    else:
+      f.write("E, wfn = properties('MP2/def2-tzvppd', properties=['GRID_ESP'], return_wfn=True)\n")
     f.write(f'fchk(wfn, "{prefix}.fchk")\n')
     f.write(f"wfn.to_file('{prefix}.npy')\n")
     f.write(f'shutil.move("grid_esp.dat", "{prefix}.grid_esp.dat")\n')
@@ -68,7 +71,10 @@ def psi4ESP_prob(atoms, coords, ff, probcoord):
     c = probcoord
     f.write("Chrgfield.extern.addCharge(0.125000,%10.6f,%10.6f,%10.6f)\n"%(c[0], c[1], c[2]))
     f.write("psi4.set_global_option_python('EXTERN', Chrgfield.extern)\n")
-    f.write("E, wfn = properties('MP2/aug-cc-pVTZ', properties=['GRID_ESP'], return_wfn=True)\n")
+    if "I" not in atoms:
+      f.write("E, wfn = properties('MP2/aug-cc-pVTZ', properties=['GRID_ESP'], return_wfn=True)\n")
+    else:
+      f.write("E, wfn = properties('MP2/def2-tzvppd', properties=['GRID_ESP'], return_wfn=True)\n")
     f.write(f'fchk(wfn, "{ff}.fchk")\n')
     f.write(f"wfn.to_file('{ff}.npy')\n\n")
     f.write(f'shutil.move("grid_esp.dat", "{ff}.grid_esp.dat")\n')
@@ -146,6 +152,7 @@ def multipleProbes():
         fname = f"{prefix}_{e}{a}"
         probatoms = f"{a} {patom}"
         oneProbe(fname,probatoms)
+        print(GREEN + "Generated %s"%(fname+".psi4") + ENDC)
         os.system(f"mkdir {e}{a}")
         os.system(f"mv {fname}* ./{e}{a}")
         os.system(f"ln -s {os.getcwd()}/{prefix}.grid ./{e}{a}/grid.dat")
@@ -157,9 +164,9 @@ def multipleProbes():
   return
 
 def getGridESP():
-  cmdstr = f"{tinkerdir}/potential.x 1 {prefix}.xyz -k {prefix}.key 2>/dev/null"
+  cmdstr = f"{tinkerdir}/potential.x 1 {prefix}.xyz -k {prefix}.key > /dev/null"
   os.system(cmdstr)
-  cmdstr = f"{tinkerdir}/potential.x 3 {prefix}.xyz -k {prefix}.key Y  2>/dev/null"
+  cmdstr = f"{tinkerdir}/potential.x 3 {prefix}.xyz -k {prefix}.key Y  >/dev/null "
   os.system(cmdstr)
   return 
 
@@ -167,11 +174,10 @@ def getPolarESP():
   lines = open("probes").readlines()
   currdir = os.getcwd()
   for line in lines: 
-    pre = line.split("_")[0]
     d = line.split("_")[-1].split("\n")[0]
     ff = line.split("\n")[0]
     pr = np.loadtxt("%s/%s.grid_esp.dat"%(d,ff))
-    rf = np.loadtxt(f"{pre}.grid_esp.dat")
+    rf = np.loadtxt(f"{prefix}.grid_esp.dat")
     xs,ys,zs = np.loadtxt("grid.dat", usecols=(0,1,2), unpack=True)
     hartree2kcal = 627.509
     with open("qm_polarization.pot", "w") as f:
@@ -213,6 +219,7 @@ def main():
       os.system(f"ln -s {key} {prefix}.key")
     if not os.path.isfile(f"{prefix}.psi4"):
       psi4ESP()
+      print(GREEN + "Generated %s"%(prefix + ".psi4") + ENDC)
     if not os.path.isfile(f"{prefix}.pot"):
       getGridESP()
       os.system(f"ln -s {prefix}.grid grid.dat")
