@@ -44,6 +44,7 @@ def sub(dirname):
 """ generate grids of the protein """
 def gengrids():
   x = []; y = []; z = []
+  coords = []
   lines = open(pro_pdb).readlines()
   for line in lines:
     dd = line.split()
@@ -51,6 +52,7 @@ def gengrids():
       x.append(float(line[30:38]))
       y.append(float(line[38:46]))
       z.append(float(line[46:54]))
+      coords.append([float(line[30:38]), float(line[38:46]), float(line[46:54])])
   x = np.array(x)
   y = np.array(y)
   z = np.array(z)
