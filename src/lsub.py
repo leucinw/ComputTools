@@ -32,12 +32,12 @@ def checkNode(node):
 def checkNodes(nodes):
   now = datetime.now().strftime("%b %d %Y %H:%M:%S")
   print('\033[91m' + "[" + now + "] " + "checking availability of renlab clusters..." + '\033[0m')
-  nodejobs = []
+  jobs = []
   with concurrent.futures.ProcessPoolExecutor() as executor:
     results = [executor.submit(checkNode, node) for node in nodes]
     for f in concurrent.futures.as_completed(results):
-      nodejobs.append(f.result())
-  return nodejobs 
+      jobs.append(f.result())
+  return jobs 
 
 '''prepare input filelist and nodelist that meets users requirements'''
 def prepare(flistin, scratch=300, memory=30, maxmem=999):
