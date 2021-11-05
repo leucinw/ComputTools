@@ -23,12 +23,17 @@ def gen_pureLiquidBox(xyz):
   atoms = np.loadtxt(xyz, usecols=(1,), skiprows=1, dtype="str", unpack=True)
   for atom in atoms:
     mass += massdict[atom.upper()]
-  volume = size**3.0
+  if len(sizes) == 1:
+    volume = sizes[0]**3.0
+  elif len(sizes) == 3:
+    volume = sizes[0]*sizes[1]*sizes[2]
+  else:
+    sys.exit("not sure what the size you want")
   nmolecule = (int(navogadro*volume/(mass/density)*0.1))
 
   #use xyzedit to generate the box and do minimization
   with open("tmp.in", "w") as f:
-    f.write("19\n%s\n%s %s %s\nY\n"%(nmolecule, size,size,size))
+    f.write("22\n%s\n%s %s %s\nY\n"%(nmolecule, sizes[0],sizes[1],sizes[2]))
   with open("shot.key","w") as f:
     f.write(f"parameters {prm}\n")
     f.write("openmp-threads 8\n")
@@ -41,24 +46,31 @@ def gen_pureLiquidBox(xyz):
   if not os.path.isfile("%s_2"%xyz):
     print("Box builder failed for %s !"%xyz)
   else:
-    boxname = "%s-%sA.xyz"%(os.path.splitext(xyz)[0], int(size))
+    if len(sizes) == 1:
+      boxname = "%s-cubic.xyz"%(os.path.splitext(xyz)[0])
+    elif len(sizes) == 3:
+      boxname = "%s-rectangular.xyz"%(os.path.splitext(xyz)[0])
+    else:
+      sys.exit("sizes you provided are not understood")
     os.system("mv %s_2 %s"%(xyz, boxname))
-  return boxname
+    return boxname 
 
 '''Generate a Box of Solvent with solute being soaked in it'''
 def gen_soluteSolventBox():
   #generate a pure liquid box of the solvent molecule
   solvbox = gen_pureLiquidBox(solvent)
-
+  solutename, _ = os.path.splitext(solute)
+  solventname, _ = os.path.splitext(solvent)
   #use xyzedit to soak the solute in the box
-  cmdstr = "%s %s %s %s %s && wait"%(xyzedit, solute, prm, 20, solvbox)
+  cmdstr = "%s %s %s %s %s && wait"%(xyzedit, solute, prm, 23, solvbox)
   os.system(cmdstr)
 
   #rename the generated xyz file
   if not os.path.isfile("%s.xyz_2"%os.path.splitext(solute)[0]):
     print("Box builder failed for %s !"%solvent)
   else:
-    os.system("mv %s.xyz_2 %s_in_%s_box.xyz"%(os.path.splitext(solute)[0], os.path.splitext(solute)[0], os.path.splitext(solvent)[0]))
+    newbox = "%s_in_%s_box.xyz"%(solutename, solventname)
+    os.system("mv %s.xyz_2 %s "%(solutename, newbox))
   return 
 
 '''Generate a Box of binary mixtures with specified molar fraction and size'''
@@ -160,19 +172,20 @@ def main():
   parser.add_argument('-solute', dest='solute', required=True, help="tinker xyz file of solute molecule")  
   parser.add_argument('-solvent',dest='solvent',required=False,help="tinker xyz file of solvent molecule")  
   parser.add_argument('-prm',    dest='prm',    required=True, help="tinker prm file")  
-  parser.add_argument('-size',   dest='size',   required=True, help="box size in angstrom")  
+  parser.add_argument('-size',   dest='size',   nargs='+', required=True, help="box size in angstrom")  
   parser.add_argument('-density',dest='density',required=True, help="liquid density in g/cm^3")  
   parser.add_argument('-tinker', dest='path',   required=True, help="tinker path where executable located in")  
   parser.add_argument('-molar1', dest='molar1', required=False,help="molar fraction of the first/solute substance")  
   args = vars(parser.parse_args())
 
-  global solute,solvent,prm,size,path,density,xyzedit,xyz
+  global solute,solvent,prm,sizes,path,density,xyzedit,xyz
 
   mode = args["mode"]
   solute = args["solute"]
   solvent = args["solvent"]
   prm = args["prm"]
-  size = float(args["size"])
+  sizes = args["size"]
+  sizes = [float(size) for size in sizes] 
   path = args["path"]
   density = float(args["density"])
   xyzedit = os.path.join(path, "xyzedit.x")
