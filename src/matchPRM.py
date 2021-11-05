@@ -12,7 +12,7 @@
 
 import os,sys,subprocess
 
-tinkerexedir = "/home/liuchw/Softwares/tinkers/tinker8.2-intel13/source"
+tinkerexedir = "$TINKER8C8"
 
 def readTXYZ(TXYZ, singleAtom=False):
   atoms=[];coord=[]; tails = []
