@@ -11,12 +11,20 @@ import time
 import numpy
 import argparse
 import subprocess
+import concurrent.futures 
 
 # color
 RED = '\033[91m'
 ENDC = '\033[0m'
 GREEN = '\033[92m'
 YELLOW = '\033[93m'
+  
+def smi2mol2(infile):
+  outfile = infile.replace("smi", "mol2")
+  cmdstr = f"babel {infile} {outfile} --gen3D -h"
+  subprocess.run(cmdstr, shell=True, timeout=30)
+  print(GREEN + f"{cmdstr}" + ENDC)
+  return
 
 def main():
   parser = argparse.ArgumentParser()
@@ -37,9 +45,9 @@ def main():
   parser.add_argument('-tp',    dest = 'template', default = None, help="template txyz file used to convert to new txyz")
   parser.add_argument('-b',     dest = 'basis',  default = "STO-3G", help="basis function for quantum job", type=str.lower)
   parser.add_argument('-at',    dest = 'atomtype', nargs='+', default = None, help="atom types for txyz file. Please provide in a row")
-  parser.add_argument('-ot',    dest = 'outType', required=True, choices = ["xyz", "qcin", "psi4", "com", "txyz", "pdb"], help="output file type")
+  parser.add_argument('-ot',    dest = 'outType', required=True, choices = ["xyz", "qcin", "psi4", "com", "txyz", "pdb", "smi", "mol2"], help="output file type")
   parser.add_argument('-j',     dest = 'jobType', default="sp", type=str.lower, help="job type, can be opt, sp, freq, cbs, sapt, opt+freq, dipole, esp, polar. Default: sp")
-  parser.add_argument('-it',    dest = 'inType', required=True, choices = ["xyz", "txyz", "g09", "qcout", "mol", "mol2", "psi4", "sdf", "pdb", "psi4out", "pdb"], help="input file type")
+  parser.add_argument('-it',    dest = 'inType', required=True, choices = ["xyz", "txyz", "g09", "qcout", "mol", "mol2", "psi4", "sdf", "pdb", "psi4out", "pdb", "smi"], help="input file type")
   args = vars(parser.parse_args())
 
   fi = args["input"]
@@ -72,7 +80,7 @@ def main():
   tp = args["template"]
 
   def ToXYZ(fi,fo):
-    if (ti in ["XYZ", "G09", "QCOUT", "MOL", "MOL2", "PDB", "SDF"]):
+    if (ti in ["XYZ", "G09", "QCOUT", "MOL", "PDB", "SDF"]):
       cmdstr = "babel -i%s %s -oxyz %s"%(ti.lower(), fi, fo)
     elif ti == "TXYZ":
       txyz2xyz(fi,fo)
@@ -83,6 +91,9 @@ def main():
     elif ti == "PSI4":
       psi42xyz(fi,fo)
       cmdstr=f"echo ' Converted {fi} using psi42xyz' "
+    elif ti == "MOL2":
+      mol22xyz(fi)
+      cmdstr=f"echo ' Converted {fi} using mol22xyz' "
     else:
       sys.exit(RED + f"File format {ti} not supported!"+ ENDC)
     subprocess.run(cmdstr,shell=True)
@@ -90,7 +101,70 @@ def main():
 
   def ToPDB(fi,fo):
     if (ti in ["XYZ", "G09", "QCOUT", "MOL", "MOL2", "PDB", "SDF"]):
-      cmdstr = "babel -i%s %s -oxyz %s"%(ti.lower(), fi, fo)
+      cmdstr = "babel -i%s %s -opdb %s"%(ti.lower(), fi, fo)
+    else:
+      sys.exit(RED + f"File format {ti} not supported!"+ ENDC)
+    subprocess.run(cmdstr,shell=True)
+    return
+  
+  def mol22xyz(inp):
+    fname, _ = os.path.splitext(inp)
+    lines = open(inp).readlines()
+    indx0 = lines.index("@<TRIPOS>ATOM\n")+1
+    indx1 = lines.index("@<TRIPOS>BOND\n")
+    atoms = []
+    coords = []
+    for i in range(indx0, indx1):
+      if "LP" not in lines[i]:
+        dd = lines[i].split()
+        atom = dd[5].split(".")[0]
+        atoms.append(atom)
+        coords.append([dd[2], dd[3], dd[4]])
+    with open(fname + ".xyz", "w") as f:
+      f.write("%s\n\n"%len(atoms))
+      for atom,coord in zip(atoms,coords):
+        f.write("%5s %s %s %s\n"%(atom, coord[0], coord[1], coord[2]))
+    return
+
+  def ToSMI(fi,fo):
+    if (ti in ["XYZ", "G09", "QCOUT", "MOL", "PDB", "SDF"]):
+      cmdstr = "babel -i%s %s -osmi %s"%(ti.lower(), fi, fo)
+    elif ti == "MOL2":
+      mol22xyz(fi)
+      tmpxyz = fi.replace("mol2", "xyz")
+      cmdstr = "babel -ixyz %s -osmi %s && rm %s"%(tmpxyz, fo, tmpxyz)
+    else:
+      sys.exit(RED + f"File format {ti} not supported!"+ ENDC)
+    subprocess.run(cmdstr,shell=True)
+    return
+  
+  
+  def ToMOL2(fi,fo):
+    if (ti in ["XYZ", "G09", "QCOUT", "MOL", "PDB", "SDF"]):
+      cmdstr = "babel -i%s %s -omol2 %s"%(ti.lower(), fi, fo)
+    elif ti == "SMI":
+      lines = open(fi).readlines()
+      nline = len(lines)
+      digits = int(numpy.log10(nline)) + 1
+      if nline <= 1:
+        cmdstr = "babel -ismi %s -omol2 %s --gen3D -h"%(fi, fo)
+      else:
+        smilist = []
+        print(GREEN + "splitting smi file ..." + ENDC)
+        for i in range(nline):
+          fname = f"%0{digits}d"%(i+1)
+          smilist.append("tmp_" + fname + ".smi")
+          with open("tmp_" + fname + ".smi", "w") as fw:
+            if len(lines[i].split()) == 1:
+              fw.write(lines[i][:-1] + "  " + fname + "\n") 
+            else:
+              fw.write(lines[i])
+        jobs = []
+        with concurrent.futures.ProcessPoolExecutor() as executor:
+          results = [executor.submit(smi2mol2, smi) for smi in smilist]
+          for f in concurrent.futures.as_completed(results):
+            jobs.append(f.result())
+        cmdstr = f"cat tmp_*.mol2 > {fo}"
     else:
       sys.exit(RED + f"File format {ti} not supported!"+ ENDC)
     subprocess.run(cmdstr,shell=True)
@@ -152,7 +226,7 @@ def main():
   def ToCOM(fi,fo):
     # generate a generic com file
     if (ti in ["XYZ", "COM", "G09", "QCOUT", "MOL", "MOL2", "PDB", "SDF"]):
-      cmdstr = "babel -i%s %s -ogau %s"%(ti.lower(), fi, fo)
+      cmdstr = "babel -i%s %s -ogau %s --gen3d"%(ti.lower(), fi, fo)
     elif ti == "TXYZ":
       txyz2xyz(fi,fxyz)
       cmdstr = "babel -ixyz %s -ogau %s && rm -f %s"%(fxyz, fo, fxyz)
@@ -169,10 +243,7 @@ def main():
     mem   = "%Mem="+me +"\n"
     
     if (jt.upper() == "OPT"):
-      if con == ' ':
-        extra =  "opt(calcFC, maxcycle=400) IOP(5/13=1) \n"
-      else:
-        extra =  "opt(calcFC, maxcycle=400, %s) IOP(5/13=1) \n"%con
+      extra =  "opt(calcFC, maxcycle=400) IOP(5/13=1) \n"
     elif (jt.upper() == "OPT+FREQ"):
       extra = "IOP(5/13=1)\n"
     else:
@@ -431,6 +502,10 @@ def main():
     ToXYZ(fi, fo)
   elif (to == "PDB"):
     ToPDB(fi, fo)
+  elif (to == "SMI"):
+    ToSMI(fi, fo)
+  elif (to == "MOL2"):
+    ToMOL2(fi, fo)
   elif (to == "TXYZ"):
     ToTXYZ(fi, fo, at)
   else:
