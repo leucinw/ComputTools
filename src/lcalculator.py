@@ -23,6 +23,8 @@ def main():
   parser.add_argument('-c2', dest = 'ncolumn2',required=False, type=int)  
   parser.add_argument('-s1', dest = 'skiprow1', default=0, type=int)  
   parser.add_argument('-s2', dest = 'skiprow2', default=0, type=int)  
+  parser.add_argument('-r1', dest = 'startrow', default=1, type=int)  
+  parser.add_argument('-r2', dest = 'stoprow', default = None)  
   parser.add_argument('-o',  dest = 'operator', required=True, type=str.upper, choices=['MIN', 'MAX', 'MEDIAN', 'MEAN', 'STD', 'SUM', 'RMSE', 'MUE', 'MSE'])
   args = vars(parser.parse_args())
   
@@ -35,7 +37,8 @@ def main():
   op = args["operator"]
   s1 = args["skiprow1"]
   s2 = args["skiprow1"]
-  
+  r1 = args["startrow"]
+  r2 = args["stoprow"]
   # minimal
   def fmin(arr):
     print(GREEN + "MIN value: %12.6f"%(np.min(arr)) + ENDC)
@@ -75,11 +78,20 @@ def main():
     mue = (np.abs(arr1-arr2)).mean()
     print(GREEN + "Mean Unsigned Error: %12.6f"%(mue) + ENDC)
     return 
-  
+ 
+  # read in data
   arr1 = np.loadtxt(f1, usecols=(c1,), dtype="float", skiprows=s1)
+  if r2 == None:
+    r2 = len(arr1)
+  else:
+    r2 = int(r2)
+
+  arr1 = arr1[r1-1:r2] 
+  
   if f2:
     arr2 = np.loadtxt(f2, usecols=(c2,), dtype="float", skiprows=s2)
-
+    arr2 = arr2[r1-1:r2] 
+  
   if (op == "MIN"):
     fmin(arr1)
   elif (op == "MAX"):
