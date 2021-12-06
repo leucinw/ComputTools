@@ -5,22 +5,72 @@
 #   University of Texas at Austin  #
 #===================================
 
+import os
 import argparse
 import numpy as np
+import networkx as nx
+
+# read atoms and coordinate from xyz file
+def readXYZ(xyz):
+  atoms  = np.loadtxt(xyz, usecols=(0,), dtype='str', unpack=True, skiprows=2)
+  coords = np.loadtxt(xyz, usecols=(1,2,3), dtype='float', unpack=False, skiprows=2)
+  return atoms,coords
+
+# get the NOA of first molecule
+def NOAfirst(xyz):
+  txyz = xyz.replace(".xyz", ".txyz")
+  os.system(f"babel {xyz} {txyz}")
+  g = nx.Graph()
+  nodes = []
+  edges = []
+  lines = open(txyz).readlines()
+  for line in lines[1:]:
+    d = line.split()
+    if d[0] not in nodes: 
+      nodes.append(int(d[0]))
+    for c in d[6:]:
+      s = sorted([int(d[0]), int(c)])
+      if s not in edges:
+        edges.append(s)
+  
+  g.add_nodes_from(nodes)
+  g.add_edges_from(edges)
+        
+  monomers = nx.connected_components(g)
+  for m in monomers:
+    nfirst = len(m)
+    break
+  return nfirst
+
+# calculate distance between two atoms 
+def distance(coord1, coord2):
+  coord1 = np.array(coord1)
+  coord2 = np.array(coord2)
+  dist = np.sqrt(np.square(coord1-coord2).sum()) 
+  return dist
+
+# calculate geometric center of a bunch of atoms
+def geomCenter(coords):
+  coords = np.array(coords)
+  geocent = [coords[:,0].mean(), \
+             coords[:,1].mean(), \
+             coords[:,2].mean()]
+  return geocent
 
 def main():
   parser = argparse.ArgumentParser()
   parser.add_argument('-xyz',  dest = 'xyzfile', required=True)  
   parser.add_argument('-p1',  dest = "points1", nargs='+', required=True) 
   parser.add_argument('-p2',  dest = "points2", nargs='+', required=True) 
-  parser.add_argument('-n1',  dest = 'nfirst', required=True)
   parser.add_argument('-d',   dest = 'dist_real', default=None)
   parser.add_argument('-r',   dest = 'dist_ratio', default=None)
+  parser.add_argument('-n1',  dest = 'nfirst', default=0, help="Optional. Autodetected if not provided.")
   args = vars(parser.parse_args())
   xyzfile = args["xyzfile"]
-  n1 = int(args["nfirst"])
   p1 = args["points1"]
   p2 = args["points2"]
+  n1 = args["nfirst"]
+
   use_ratio = False
   use_real = False
   if args["dist_ratio"] != None:
@@ -36,26 +86,9 @@ def main():
     pass
   else:
     sys.exit("Error: distance must be provided either via ratio or real distance")
-
-  # read atoms and coordinate from xyz file
-  def readXYZ(xyz):
-    atoms  = np.loadtxt(xyz, usecols=(0,), dtype='str', unpack=True, skiprows=2)
-    coords = np.loadtxt(xyz, usecols=(1,2,3), dtype='float', unpack=False, skiprows=2)
-    return atoms,coords
-
-  # calculate distance between two atoms 
-  def distance(coord1, coord2):
-    coord1 = np.array(coord1)
-    coord2 = np.array(coord2)
-    dist = np.sqrt(np.square(coord1-coord2).sum()) 
-    return dist
-  # calculate geometric center of a bunch of atoms
-  def geomCenter(coords):
-    coords = np.array(coords)
-    geocent = [coords[:,0].mean(), \
-               coords[:,1].mean(), \
-               coords[:,2].mean()]
-    return geocent
+  
+  if n1 == 0: 
+    n1 = NOAfirst(xyzfile)
   
   # first and second molecule
   atoms, coords = readXYZ(xyzfile)
