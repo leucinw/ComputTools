@@ -36,8 +36,9 @@ def rotMatrix(axis, theta):
   return rotmat
 
 def hotspots(xyz):
-  os.system("babel -ixyz %s -otxyz t.t"%xyz)
-  types = np.loadtxt("t.t", usecols=(5), dtype="int", unpack=True, skiprows=1)
+  #os.system("babel -ixyz %s -otxyz t.t"%xyz)
+  os.system(f"python /home/liuchw/bin/lToTXYZ.py -i {xyz} -t xyz")
+  types = np.loadtxt(xyz.replace(".xyz", ".txyz"), usecols=(5), dtype="int", unpack=True, skiprows=1)
   spots = []
   records = []
   for i in range(len(types)):
@@ -129,7 +130,7 @@ def main():
   vdwradius = {"H" : 1.20, "Li": 1.82, "Na": 2.27, "K": 2.75, "Rb": 3.03, "Cs": 3.43, \
                "Be": 1.53, "Mg": 1.73, "Ca": 2.31, "B": 1.92, "C": 1.70, "N": 1.55, "O":1.52, \
                "P" : 1.80, "S" : 1.80, "F" : 1.47, "Cl":1.75, "Br":1.85, "Zn":1.39}           
-
+  scaling = 1.0
   for mol in molecules:
     atoms1, coords1 = readXYZ(mol)
     mol_spots = hotspots(mol)
@@ -141,7 +142,7 @@ def main():
         for p2 in prob_spots:
           a1 = atoms1[p1]
           a2 = atoms2[p2]
-          dist = (vdwradius[a1]+vdwradius[a2])
+          dist = (vdwradius[a1]+vdwradius[a2])*scaling
           dimer = mol[:-4] + "-" + prob[:-4] + "_" + str("%03d"%number) + ".xyz"
           stat = optimize(atoms1, atoms2, coords1, coords2, p1, p2, dist, dimer)
           if not stat: number += 1
