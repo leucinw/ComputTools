@@ -100,9 +100,10 @@ def splittxyz(txyz):
         
   monomers = nx.connected_components(g)
   monoid = 0
+  fname, _ = os.path.splitext(txyz)
   for m in monomers:
     atoms = sorted(list(m))
-    mononame = f"mono_{monoid:04d}.txyz"
+    mononame = f"{fname}_mono_{monoid:04d}.txyz"
     with open(mononame, 'w') as f:
       f.write(f"{len(atoms):>5d}\n")
       for a in atoms:
