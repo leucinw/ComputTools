@@ -49,7 +49,7 @@ def ClassBasedTerms(pline, term):
         newclasses = [class_maps[d[1]], class_maps[d[2]]]
         newline = '  '.join([d[0], newclasses[0], newclasses[1], d[3], d[4]])
         f.write(newline + "\n")
-    elif term == "angle":
+    elif (term == "angle") or (term == "anglep"):
       if set([d[1], d[2], d[3]]).issubset(set(class_maps.keys())):
         newclasses = [class_maps[d[1]], class_maps[d[2]], class_maps[d[3]]]
         newline = '  '.join([d[0], newclasses[0], newclasses[1], newclasses[2], d[4], d[5]])
@@ -85,16 +85,26 @@ def TypeBasedTerms(pline, term):
     if term == 'polarize':
       if d[1] in type_maps.keys():
         newtypes = type_maps[d[1]]
-        for i in range(len(d)-1,3,-1):
+        if fun == "AMOEBA":
+          grpidx = 3
+        if fun == "AMOEBAPLUS":
+          grpidx = 4
+        for i in range(len(d)-1,grpidx,-1):
           if d[i] in type_maps.keys():
             groups.append(type_maps[d[i]])
           else:
             groups.append('0')
         groups.reverse()
         if groups != []:
-          newline = '  '.join([d[0], newtypes, '  '.join(d[2:4])] + groups)
+          if fun == "AMOEBA":
+            newline = '  '.join([d[0], newtypes, '  '.join(d[2:4])] + groups)
+          if fun == "AMOEBAPLUS":
+            newline = '  '.join([d[0], newtypes, '  '.join(d[2:5])] + groups)
         else:
-          newline = '  '.join([d[0], newtypes, '  '.join(d[2:4])])
+          if fun == "AMOEBA":
+            newline = '  '.join([d[0], newtypes, '  '.join(d[2:4])])
+          if fun == "AMOEBAPLUS":
+            newline = '  '.join([d[0], newtypes, '  '.join(d[2:5])])
         f.write(newline + "\n")
     
     elif term == "multipole":
@@ -129,9 +139,9 @@ def main():
   parser.add_argument('-xyz', dest = 'xyz', required=True, help="tinker xyz")
   parser.add_argument('-prm', dest = 'prm', required=True, help="tinker key")
   parser.add_argument('-idx', dest = 'idx', required=True, help="atom index", type=int)
-  parser.add_argument('-fun', dest = 'fun', default='AMOEBA', help="force field", type=str.upper, choices=['AMOEBA', 'AMOEBAPLUS'])
+  parser.add_argument('-fun', dest = 'fun', default='AMOEBAPLUS', help="force field", type=str.upper, choices=['AMOEBA', 'AMOEBAPLUS'])
   args = vars(parser.parse_args())
-  global xyz,prm,idx 
+  global xyz,prm,idx,fun 
   xyz = args["xyz"]
   prm = args["prm"]
   idx = args["idx"]
@@ -159,7 +169,7 @@ def main():
       f.write(h)
 
   type_maps, class_maps, parameters = readINPUTS()
-  keywords = ["atom ", "bond ", "angle ", "strbnd ", "opbend ", "torsion ", "vdw ", "polarize ", "multipole "]
+  keywords = ["atom ", "bond ", "angle ", "anglep ", "strbnd ", "opbend ", "torsion ", "vdw ", "polarize ", "multipole "]
   valwords = [k.split()[0] for k in keywords]
   keyvals = dict(zip(keywords,valwords))
   classBased_terms = dict(list(keyvals.items())[:-2]) 
